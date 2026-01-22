@@ -1,0 +1,10 @@
+[package]
+name = "knights_edge"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { version = "0.18.0", features = ["2d", "debug"] }
+bevy_egui = "0.39.0"
+sha2 = "*"
+fastnoise-lite = "*"
