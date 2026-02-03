@@ -66,7 +66,7 @@ struct PhysicalTranslation(Vec2);
 struct PreviousPhysicalTranslation(Vec2);
 
 // My own requiring component to avoid repeating multiple components in system queries
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(PhysicalTranslation, PreviousPhysicalTranslation, Velocity)]
 pub struct PhysicsObject;
 

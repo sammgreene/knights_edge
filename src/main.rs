@@ -4,6 +4,7 @@ mod player;
 mod physics;
 mod asset_loading;
 mod debug;
+mod render;
 
 fn main() {
     App::new()
@@ -12,13 +13,6 @@ fn main() {
         .add_plugins(player::PlayerPlugin)
         .add_plugins(physics::PhysicsPlugin)
         .add_plugins(debug::DebugPlugin)
+        .add_plugins(render::RenderPlugin)
         .run();
-}
-
-pub enum ZLayers {
-    Background,
-    World,
-    Foliage,
-    Entities,
-    UI,
 }

@@ -15,7 +15,9 @@ pub fn spawn_player_camera(
 ) {
     // --- Camera entity ---
     let mut projection = OrthographicProjection::default_2d();
-    projection.scale = 0.025;
+    projection.near = -1000.0;
+    projection.far = 1000.0;
+    projection.scale = 0.025; // larger number zooms out
 
     commands.spawn((
         Camera2d,

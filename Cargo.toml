@@ -8,3 +8,4 @@ bevy = { version = "0.18.0", features = ["2d", "debug"] }
 bevy_egui = "0.39.0"
 sha2 = "*"
 fastnoise-lite = "*"
+dynfmt = { version = "0.1", features = ["curly"] }

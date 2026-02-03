@@ -2,7 +2,7 @@ use bevy::prelude::*;
 mod player_camera;
 
 use player_camera::*;
-use crate::ZLayers;
+use crate::render::{ YSort, ZLayers };
 
 // Components
 #[derive(Component)]
@@ -17,16 +17,20 @@ pub fn spawn_player(
     // --- Player entity ---
     commands.spawn((
         Player,
+
         Sprite {
             image: asset_server.load("player/player.png"),
             custom_size: Some(Vec2::splat(1.0)),
             ..default()
         },
-        Transform::from_xyz(0.0, 0.0, ZLayers::Entities as i32 as f32),
+        YSort::on_layer(ZLayers::Foliage),
+
+        Transform::from_xyz(0.0, 0.0, 0.0),
         GlobalTransform::default(),
         Visibility::Visible,
         InheritedVisibility::default(),
         ViewVisibility::default(),
+        
         crate::physics::PhysicsObject,
         crate::physics::player_movement_physics::PlayerController
     ));
