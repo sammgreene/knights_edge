@@ -8,7 +8,7 @@ impl Plugin for PhysicsPlugin {
         app
             .init_resource::<DidFixedTimestepRunThisFrame>()
             // At the beginning of each frame, clear the flag that indicates whether the fixed timestep has run this frame.
-            .add_systems(PreUpdate, clear_fixed_timestep_flag)
+            .add_systems(PreUpdate, (clear_fixed_timestep_flag, initialize_physics_objects))
             // At the beginning of each fixed timestep, set the flag that indicates whether the fixed timestep has run this frame.
             .add_systems(FixedPreUpdate, set_fixed_time_step_flag)
             // Advance the physics simulation using a fixed timestep.
@@ -58,7 +58,7 @@ pub struct Velocity(pub Vec2);
 /// with the same value as the `Transform`'s translation, you can
 /// use a [component lifecycle hook](https://docs.rs/bevy/0.14.0/bevy/ecs/component/struct.ComponentHooks.html)
 #[derive(Debug, Component, Clone, Copy, PartialEq, Default, Deref, DerefMut)]
-struct PhysicalTranslation(Vec2);
+pub struct PhysicalTranslation(pub Vec2);
 
 /// The value [`PhysicalTranslation`] had in the last fixed timestep.
 /// Used for interpolation in the `interpolate_rendered_transform` system.
@@ -119,7 +119,7 @@ fn interpolate_rendered_transform(
         &mut Transform,
         &PhysicalTranslation,
         &PreviousPhysicalTranslation),
-        With<crate::player::Player>
+        // With<crate::player::Player>
     >,
 ) {
     for (mut transform, current_physical_translation, previous_physical_translation) in
@@ -133,5 +133,15 @@ fn interpolate_rendered_transform(
         let rendered_translation = previous.lerp(current, alpha);
         transform.translation.x = rendered_translation.x;
         transform.translation.y = rendered_translation.y;
+    }
+}
+
+fn initialize_physics_objects(
+    mut query: Query<(&Transform, &mut PhysicalTranslation, &mut PreviousPhysicalTranslation), Added<PhysicsObject>>
+) {
+    for (transform, mut phys, mut prev) in &mut query {
+        let pos = Vec2::new(transform.translation.x, transform.translation.y);
+        phys.0 = pos;
+        prev.0 = pos;
     }
 }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::world::{world_lib, world_noise};
@@ -7,13 +8,42 @@ pub const CHUNK_SIZE: usize = 16; // world units
 pub const ONION_CHUNK_SIZE: usize = CHUNK_SIZE + 2; // world units
 pub const RENDER_DISTANCE: u32 = 4; // chunks
 
-///  Resources
-#[derive(Resource)]
-pub struct WorldGenerator;
+fn world_to_chunk_coord(x: i32, y: i32) -> IVec2 {
+    return ivec2(x / CHUNK_SIZE as i32, y / CHUNK_SIZE as i32)
+}
+fn world_to_chunk_position(x: i32, y: i32) -> (usize, usize) {
+    let size = CHUNK_SIZE as i32;
 
+    let rx = x.rem_euclid(size) as usize;
+    let ry = y.rem_euclid(size) as usize;
+
+    (rx, ry)
+}
+
+// WorldMap Resource
+// contains a hashmap of all chunk entities
+// indexed by chunk coordinate
+// 
+// New chunks are regiserted automatically by register_new_chunks
 #[derive(Resource, Default)]
-pub struct LoadedChunks {
-    pub coords: std::collections::HashSet<IVec2>,
+pub struct WorldMap {
+    pub chunks: HashMap<IVec2, Entity>
+}
+pub fn get_tile_at(
+    world_map: Res<WorldMap>,
+    chunks_query: Query<&Chunk>,
+    x: i32,
+    y: i32
+) -> Option<WorldTile> { // REMOVE ONIONSKIN
+    let chunk_coord = world_to_chunk_coord(x, y);
+    let (index_x, index_y) = world_to_chunk_position(x, y);
+
+    if let Some(chunk_entity) = world_map.chunks.get(&chunk_coord) {
+        if let Ok(chunk) = chunks_query.get(*chunk_entity) {
+            return Some(chunk.tile_data[index_x][index_y]);
+        }
+    }
+    None
 }
 
 // Components
@@ -49,7 +79,7 @@ pub struct Chunk {
 // Calls spawn and gen chunks only on a nearby spiral of chunks
 // This is where RENDER_DISTANCE is used
 pub fn load_near_chunks(
-    mut loaded_chunks: ResMut<LoadedChunks>,
+    world_map: Res<WorldMap>,
     player_positions: Query<&Transform, With<crate::player::Player>>,
     noise: Res<world_noise::WorldNoise>,
     mut commands: Commands
@@ -66,8 +96,20 @@ pub fn load_near_chunks(
             if chunks_loaded_this_frame >= 1 {
                 break;
             }
-            if !loaded_chunks.coords.contains(&chunk_coord) {
-                spawn_and_gen_chunk(chunk_coord, &mut commands, &mut loaded_chunks, &noise);
+            if !world_map.chunks.contains_key(&chunk_coord) {
+                commands.spawn((
+                    gen_chunk(chunk_coord, &noise),
+
+                    Transform::from_xyz(
+                        chunk_coord.x as f32 * CHUNK_SIZE as f32,
+                        chunk_coord.y as f32 * CHUNK_SIZE as f32,
+                        0.,
+                    ),
+                    GlobalTransform::default(),
+                    Visibility::Visible,
+                    InheritedVisibility::default(),
+                    ViewVisibility::default(),
+                ));
                 chunks_loaded_this_frame += 1;
             }
         }
@@ -75,12 +117,10 @@ pub fn load_near_chunks(
 }
 
 // When spawning a chunk:
-fn spawn_and_gen_chunk(
+fn gen_chunk(
     coord: IVec2, 
-    commands: &mut Commands, 
-    loaded_chunks: &mut ResMut<LoadedChunks>,
     noise: &Res<world_noise::WorldNoise>
-) {
+) -> Chunk {
     // ### Generation RoadMap
     // 1. generate altitude, temperature, and moisture noises
     //    - some day maybe foliage low freq
@@ -151,27 +191,15 @@ fn spawn_and_gen_chunk(
         }
     }
 
-    commands.spawn((
-        Chunk { coord, tile_data, foliage_data, biome_data },
-        Transform::from_xyz(
-            coord.x as f32 * CHUNK_SIZE as f32,
-            coord.y as f32 * CHUNK_SIZE as f32,
-            0.,
-        ),
-        GlobalTransform::default(),
-        Visibility::Visible,
-        InheritedVisibility::default(),
-        ViewVisibility::default(),
-    ));
-    loaded_chunks.coords.insert(coord);
+    Chunk { coord, tile_data, foliage_data, biome_data }
 }
 
 pub fn despawn_distant_chunks(
     chunks_query: Query<(Entity, &Chunk), With<Chunk>>,
     children_query: Query<&Children>, // <-- add this!
     player_transform: Single<&Transform, With<crate::player::Player>>,
+    mut world_map: ResMut<WorldMap>,
     mut commands: Commands,
-    mut loaded_chunks: ResMut<LoadedChunks>,
 ) {
     let player_pos = player_transform;
 
@@ -185,7 +213,7 @@ pub fn despawn_distant_chunks(
     for (entity, chunk) in chunks_query.iter() {
         if chunk.coord.distance_squared(player_chunk) > render_dist_squared {
             despawn_recursive(&mut commands, entity, &children_query);
-            loaded_chunks.coords.remove(&chunk.coord);
+            world_map.chunks.remove(&chunk.coord);
         }
     }
 }
@@ -197,6 +225,15 @@ fn despawn_recursive(commands: &mut Commands, entity: Entity, query: &Query<&Chi
         }
     }
     commands.entity(entity).despawn();
+}
+
+pub fn register_new_chunks(
+    mut world_map: ResMut<WorldMap>,
+    chunks_query: Query<(Entity, &Chunk), Added<Chunk>>
+) {
+    for (chunk_entity, chunk) in chunks_query {
+        world_map.chunks.insert(chunk.coord, chunk_entity);   
+    }
 }
 
 

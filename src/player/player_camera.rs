@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_firefly::prelude::*;
 
 const CAMERA_DECAY_RATE: f32 = 3.5;
 
@@ -7,7 +8,6 @@ const CAMERA_DECAY_RATE: f32 = 3.5;
 pub struct PlayerCamera {
     pub decay_rate: f32,
 }
-
 
 // Systems
 pub fn spawn_player_camera(
@@ -19,8 +19,16 @@ pub fn spawn_player_camera(
     projection.far = 1000.0;
     projection.scale = 0.025; // larger number zooms out
 
+    // Lighting Scheme
+    let mut lighting = FireflyConfig::default();
+    lighting.ambient_brightness = 0.25;
+    lighting.softness = Some(0.5);
+    lighting.z_sorting = true;
+    lighting.ambient_color = Color::hsl(35., 0.89, 0.9);
+
     commands.spawn((
         Camera2d,
+        lighting,
         PlayerCamera { decay_rate: CAMERA_DECAY_RATE },
         Projection::Orthographic(projection),
         Transform::default(),

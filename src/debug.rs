@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use dynfmt::{Format, SimpleCurlyFormat};
 
-use crate::world::world_generation;
+use crate::{player::PlayerMarker, world::world_generation};
 
 #[derive(Resource)]
 pub struct DebugMenu {
@@ -45,11 +45,11 @@ impl Plugin for DebugPlugin {
             .add_systems(Startup, ui_setup)
             .add_systems(Update, (
                 update_debug_menu,
-                toggle_text_key,
+                toggle_menu,
                 count_entities,
+                debug_event_playground
                 //print_num_entities_with_component::<Sprite>,
-            ))
-            ;
+            ));
     }
 }
 
@@ -96,18 +96,26 @@ fn update_debug_menu(
     }
 }
 
-fn toggle_text_key(
+fn toggle_menu(
     keys: Res<ButtonInput<KeyCode>>,
     mut debug_menu: ResMut<DebugMenu>,
-    mut query: Query<&mut Visibility, With<DebugText>>,
+    mut text: Query<&mut Visibility, With<DebugText>>,
+    mut player_marker: Query<&mut Visibility, (With<PlayerMarker>, Without<DebugText>)>
 ) {
     let mut visible = debug_menu.render;
     if keys.just_pressed(KeyCode::F3) {
         visible = !visible;
         debug_menu.render = visible;
 
-        for mut v in &mut query {
+        for mut v in &mut text {
             *v = if visible {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            };
+        }
+        for mut player_marker in &mut player_marker {
+            *player_marker = if visible {
                 Visibility::Visible
             } else {
                 Visibility::Hidden
@@ -146,8 +154,21 @@ fn new_debug_text(name: &str, text: &str, commands: &mut Commands, debug_menu: &
             text
         ),
         DebugText { name: String::from(name), text: String::from(text) },
-        TextColor::BLACK,
+        TextColor::WHITE,
         visibility
     ));
     debug_menu.ui_line_count += 1;
+}
+
+fn debug_event_playground(
+    world_map: Res<world_generation::WorldMap>,
+    player_pos: Single<&Transform, With<crate::player::Player>>,
+    chunks_query: Query<&crate::world::world_generation::Chunk>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::Backslash) {
+        let (player_x, player_y) = (player_pos.translation.x.floor() as i32, player_pos.translation.y.floor() as i32);
+
+        info!("{:?}{:?}", (player_x, player_y), world_generation::get_tile_at(world_map, chunks_query, player_x, player_y));
+    }
 }

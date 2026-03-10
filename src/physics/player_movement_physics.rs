@@ -1,35 +1,3 @@
-// use bevy::prelude::*;
-
-// pub fn player_movement(
-//     keyboard_input: Res<ButtonInput<KeyCode>>,
-//     time: Res<Time>,
-//     mut query: Query<&mut Transform, With<PlayerMovement>>,
-// ) {
-//     // println!("Player Pos: {:?}", query.iter_mut().next().map(|t| t.translation));
-//     for mut transform in query.iter_mut() {
-//         let mut direction = Vec3::ZERO;
-
-//         if keyboard_input.pressed(KeyCode::KeyW) {
-//             direction.y += 1.0;
-//         }
-//         if keyboard_input.pressed(KeyCode::KeyS) {
-//             direction.y -= 1.0;
-//         }
-//         if keyboard_input.pressed(KeyCode::KeyA) {
-//             direction.x -= 1.0;
-//         }
-//         if keyboard_input.pressed(KeyCode::KeyD) {
-//             direction.x += 1.0;
-//         }
-
-//         if direction != Vec3::ZERO {
-//             direction = direction.normalize();
-//             let speed = 5.0;
-//             transform.translation += direction * speed * time.delta_secs();
-//         }
-//     }
-// }
-
 use bevy::prelude::*;
 
 /// A vector representing the player's input, accumulated over all frames that ran
