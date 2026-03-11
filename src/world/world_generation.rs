@@ -5,21 +5,23 @@ use crate::world::{world_lib, world_noise};
 
 // Constants
 pub const CHUNK_SIZE: usize = 16; // world units
-pub const ONION_CHUNK_SIZE: usize = CHUNK_SIZE + 2; // world units
 pub const RENDER_DISTANCE: u32 = 4; // chunks
 
 fn world_to_chunk_coord(x: i32, y: i32) -> IVec2 {
-    return ivec2(x / CHUNK_SIZE as i32, y / CHUNK_SIZE as i32)
-}
-fn world_to_chunk_position(x: i32, y: i32) -> (usize, usize) {
-    let size = CHUNK_SIZE as i32;
-
-    let rx = x.rem_euclid(size) as usize;
-    let ry = y.rem_euclid(size) as usize;
-
-    (rx, ry)
+    // World chunk coords
+    IVec2::new(
+        if x >= 0 { x / CHUNK_SIZE as i32 } else { (x + 1 - CHUNK_SIZE as i32) / CHUNK_SIZE as i32 },
+        if y >= 0 { y / CHUNK_SIZE as i32 } else { (y + 1 - CHUNK_SIZE as i32) / CHUNK_SIZE as i32 },
+    )
 }
 
+fn world_to_chunk_position(x: i32, y: i32) -> IVec2 {
+    // Local position inside chunk
+    IVec2::new(
+        ((x % CHUNK_SIZE as i32) + CHUNK_SIZE as i32) % CHUNK_SIZE as i32, 
+        ((y % CHUNK_SIZE as i32) + CHUNK_SIZE as i32) % CHUNK_SIZE as i32,
+    )
+}
 // WorldMap Resource
 // contains a hashmap of all chunk entities
 // indexed by chunk coordinate
@@ -34,13 +36,13 @@ pub fn get_tile_at(
     chunks_query: Query<&Chunk>,
     x: i32,
     y: i32
-) -> Option<WorldTile> { // REMOVE ONIONSKIN
+) -> Option<WorldTile> {
     let chunk_coord = world_to_chunk_coord(x, y);
-    let (index_x, index_y) = world_to_chunk_position(x, y);
+    let chunk_position = world_to_chunk_position(x, y);
 
     if let Some(chunk_entity) = world_map.chunks.get(&chunk_coord) {
         if let Ok(chunk) = chunks_query.get(*chunk_entity) {
-            return Some(chunk.tile_data[index_x][index_y]);
+            return Some(chunk.tile_data[chunk_position.x as usize][chunk_position.y as usize]);
         }
     }
     None
@@ -69,9 +71,9 @@ pub enum TreeType {
 #[derive(Component)]
 pub struct Chunk {
     pub coord: IVec2,
-    pub tile_data: [[WorldTile; ONION_CHUNK_SIZE]; ONION_CHUNK_SIZE], // + 2 is for overflow tiles
+    pub tile_data: [[WorldTile; CHUNK_SIZE]; CHUNK_SIZE],
     pub foliage_data: [[Foliage; CHUNK_SIZE]; CHUNK_SIZE],
-    pub biome_data: [[Biome; ONION_CHUNK_SIZE]; ONION_CHUNK_SIZE]
+    pub biome_data: [[Biome; CHUNK_SIZE]; CHUNK_SIZE]
 }
 
 // Systems
@@ -138,17 +140,17 @@ fn gen_chunk(
     //
 
     // Actual chunk data
-    let mut tile_data = [[WorldTile::Grass; ONION_CHUNK_SIZE]; ONION_CHUNK_SIZE];
+    let mut tile_data = [[WorldTile::Grass; CHUNK_SIZE]; CHUNK_SIZE];
     let mut foliage_data = [[Foliage::None; CHUNK_SIZE]; CHUNK_SIZE];
-    let mut biome_data = [[Biome::Forest; ONION_CHUNK_SIZE]; ONION_CHUNK_SIZE];
+    let mut biome_data = [[Biome::Forest; CHUNK_SIZE]; CHUNK_SIZE];
 
     let chunk_origin_x = coord.x * CHUNK_SIZE as i32;
     let chunk_origin_y = coord.y * CHUNK_SIZE as i32;
 
-    for ox in 0..ONION_CHUNK_SIZE {
-        for oy in 0..ONION_CHUNK_SIZE {
-            let world_x = chunk_origin_x + ox as i32 - 1;
-            let world_y = chunk_origin_y + oy as i32 - 1;
+    for chunk_x in 0..CHUNK_SIZE {
+        for chunk_y in 0..CHUNK_SIZE {
+            let world_x = chunk_origin_x + chunk_x as i32;
+            let world_y = chunk_origin_y + chunk_y as i32;
 
             // 1. Create biome map
             let (altitude, temperature, moisture) = noise.get_climate(world_x as f32, world_y as f32);
@@ -156,38 +158,21 @@ fn gen_chunk(
 
             let tile = tile_from_biome_data(biome);
 
-            biome_data[ox][oy] = biome;
-            tile_data[ox][oy] = tile;
+            biome_data[chunk_x][chunk_y] = biome;
+            tile_data[chunk_x][chunk_y] = tile;
         }
     }
 
-
-    // for x in 0..CHUNK_SIZE + 2 { // 0 - 17 inclusive
-    //     for y in 0..CHUNK_SIZE + 2 {
-    //         let world_x = coord.x * CHUNK_SIZE as i32 + x as i32 - 1; // offset by 1
-    //         let world_y = coord.y * CHUNK_SIZE as i32 + y as i32 - 1; // offset by 1
-
-    //         let altitude = world_noise::get_altitude(world_x as f32, world_y as f32, noise);
-    //         if altitude < 45.0 {
-    //             tile_data[x][y] = WorldTile::Water;
-    //         }
-    //         else if altitude > 100.0 {
-    //             tile_data[x][y] = WorldTile::Snow;
-    //         }
-    //     }
-    // }
-
-    for x in 0 .. CHUNK_SIZE { // 0 - 15 inclusive
-        for y in 0 .. CHUNK_SIZE {
-            let world_x = coord.x * CHUNK_SIZE as i32 + x as i32;
-            let world_y = coord.y * CHUNK_SIZE as i32 + y as i32;
+    for chunk_x in 0 .. CHUNK_SIZE { // 0 - 15 inclusive
+        for chunk_y in 0 .. CHUNK_SIZE {
+            let world_x = coord.x * CHUNK_SIZE as i32 + chunk_x as i32;
+            let world_y = coord.y * CHUNK_SIZE as i32 + chunk_y as i32;
 
             let vegetation_value = noise.white_noise_2d(world_x, world_y);
 
-            // if tile_data[x+1][y+1] == WorldTile::Water { continue; } // skip tile if it is water
-            let biome = biome_data[x+1][y+1];
+            let biome = biome_data[chunk_x][chunk_y];
 
-            foliage_data[x][y] = foliage_from_biome_and_vegetation_amp(biome, vegetation_value);
+            foliage_data[chunk_x][chunk_y] = foliage_from_biome_and_vegetation_amp(biome, vegetation_value);
         }
     }
 

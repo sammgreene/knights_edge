@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::creatures::*;
 
 pub fn near<T: Component>(
     In(entity): In<Entity>,

@@ -29,9 +29,9 @@ use std::path::{PathBuf};
 /// Search recursively in "assets" for a file with the given name.
 /// If not found, returns a blank 1x1 white image handle.
 pub fn load_asset(asset_name: &str, asset_server: &AssetServer) -> Handle<Image> {
-    let assets_path = Path::new("assets");
+    let assets_path = Path::new("");
 
-    if let Some(found_path) = find_file_recursive(assets_path, asset_name) {
+    if let Some(found_path) = find_file_recursive(assets_path, (asset_name.to_owned() + ".png").as_str()) {
         return asset_server.load(found_path);
     }
     return Handle::<Image>::default();

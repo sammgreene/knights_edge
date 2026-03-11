@@ -3,6 +3,21 @@ pub mod player_camera;
 use player_camera::*;
 use crate::render::RenderLayer;
 
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Startup, (
+                spawn_player,
+            ))
+            .add_systems(Update, (
+                player_camera::update_camera,
+                update_player_marker
+            ));
+    }
+}
+
 // Components
 #[derive(Component)]
 pub struct Player;
@@ -51,22 +66,6 @@ pub fn spawn_player(
     ));
 
     spawn_player_camera(commands);
-}
-
-
-pub struct PlayerPlugin;
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_systems(Startup, (
-                spawn_player,
-            ))
-            .add_systems(Update, (
-                player_camera::update_camera,
-                update_player_marker
-            ));
-    }
 }
 
 fn update_player_marker(

@@ -58,7 +58,7 @@ impl WorldNoise {
 
         
         let raw = self.moisture.get_noise_2d(x, y);
-        let mut moisture = raw * 0.5 + 0.5; // [0,1]
+        let moisture = raw * 0.5 + 0.5; // [0,1]
 
         (altitude, temp, moisture)
     }

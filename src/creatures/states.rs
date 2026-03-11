@@ -60,7 +60,7 @@ pub fn chasing(
         &attributes::Speed,
         &Chasing
     ), With<PhysicsObject>>,
-    targets: Query<(&PhysicalTranslation)>,
+    targets: Query<&PhysicalTranslation>,
 ) {
     for (mut velocity, chaser_translation, speed, chasing) in &mut chasers {
         if let Ok(target_translation) = targets.get(chasing.target) {

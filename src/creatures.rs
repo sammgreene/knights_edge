@@ -18,7 +18,6 @@ impl Plugin for MobPlugin {
                 states::idle,
                 states::eye_hunting,
                 states::fox_hunting,
-            ))
-        ;
+            ));
     }
 }

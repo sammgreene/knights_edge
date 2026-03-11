@@ -17,10 +17,10 @@ pub struct DebugMenu {
     pub player_coords: Vec3,
     pub current_biome: world_generation::Biome
 }
-impl Default for DebugMenu {
+impl DebugMenu {
     fn default() -> Self {
         Self {
-            render: true,
+            render: false,
             ui_line_count: 0,
             
             // show_chunks: true,
@@ -34,6 +34,10 @@ impl Default for DebugMenu {
             current_biome: world_generation::Biome::Forest,
         }
     }
+    fn with_enabled(mut self) -> Self {
+        self.render = true;
+        self
+    }
 }
 
 pub struct DebugPlugin;
@@ -41,7 +45,7 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app
-            .insert_resource(DebugMenu::default())
+            .insert_resource(DebugMenu::default().with_enabled())
             .add_systems(Startup, ui_setup)
             .add_systems(Update, (
                 update_debug_menu,

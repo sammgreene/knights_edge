@@ -15,8 +15,8 @@ pub fn spawn_tile_sprites_for_new_chunks(
     for (entity, chunk) in new_chunks.iter() {
         commands.entity(entity).with_children(|parent| {
 
-            for chunk_x in 1..CHUNK_SIZE+1 {
-                for chunk_y in 1..CHUNK_SIZE+1 {
+            for chunk_x in 0..CHUNK_SIZE {
+                for chunk_y in 0..CHUNK_SIZE {
                     let world_x = chunk.coord.x * CHUNK_SIZE as i32 + chunk_x as i32;
                     let world_y = chunk.coord.y * CHUNK_SIZE as i32 + chunk_y as i32;
                     
@@ -38,11 +38,9 @@ pub fn spawn_tile_sprites_for_new_chunks(
                     ));
 
                     // Foliage Spawning
-                    let fx = chunk_x-1;
-                    let fy = chunk_y-1;
-                    if chunk.foliage_data[fx][fy] == Foliage::None { continue; }
+                    if chunk.foliage_data[chunk_x][chunk_y] == Foliage::None { continue; }
 
-                    let foliage_asset = match chunk.foliage_data[fx][fy] {
+                    let foliage_asset = match chunk.foliage_data[chunk_x][chunk_y] {
                         Foliage::Rock => 
                             crate::asset_loading::load_random_asset_from_dir(
                                 "foliage/rocks/small_rock", 
@@ -69,14 +67,14 @@ pub fn spawn_tile_sprites_for_new_chunks(
                     let mut new_y = chunk_y;
                     let mut size_x = 1.0;
                     let mut size_y = 1.0;
-                    if chunk.foliage_data[fx][fy] == Foliage::Tree(TreeType::Oak) {
+                    if chunk.foliage_data[chunk_x][chunk_y] == Foliage::Tree(TreeType::Oak) {
                         size_x = 5.;
                         size_y = 7.;
                         new_y = chunk_y;
                         new_x = chunk_x - 2;
                     }
                     parent.spawn((
-                        chunk.foliage_data[fx][fy], // Foliage
+                        chunk.foliage_data[chunk_x][chunk_y], // Foliage
                         Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
                         render::RenderLayer::FoliageBack,// .with_offset(new_y as f32 - chunk_y as f32),
                         Sprite {
@@ -101,8 +99,8 @@ pub fn spawn_tile_sprites_for_new_chunks(
 
 // world_tile_at(x,y)
 fn get_tile_asset_and_rotation(asset_server: &Res<AssetServer>, chunk: &Chunk, x: usize, y: usize) -> (Handle<Image>, Quat) {
-    let world_x = chunk.coord.x * CHUNK_SIZE as i32 + x as i32 - 1;
-    let world_y = chunk.coord.y * CHUNK_SIZE as i32 + y as i32 - 1;
+    let world_x = chunk.coord.x * CHUNK_SIZE as i32 + x as i32;
+    let world_y = chunk.coord.y * CHUNK_SIZE as i32 + y as i32;
 
     match chunk.tile_data[x][y] {
         WorldTile::Grass => (

@@ -14,7 +14,7 @@ pub struct GameTime {
 
 impl GameTime {
     pub fn default() -> Self {
-        Self { time: 0., speedup: 2000., start_time: SUNRISE - 1000.} // minute long days
+        Self { time: 0., speedup: 1000., start_time: SUNRISE - 1000.} // minute long days
     }
     pub fn is_day(&self) -> bool {
         self.time > SUNRISE && self.time < SUNSET
@@ -29,7 +29,6 @@ pub fn advance_game_time(
     engine_time: Res<Time>
 ) {
     game_time.time = (engine_time.elapsed_secs_f64() * game_time.speedup + game_time.start_time) % 86400.;
-    info!(game_time.time)
 }
 
 pub fn update_ambient_light(

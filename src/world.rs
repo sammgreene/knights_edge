@@ -17,14 +17,17 @@ impl Plugin for WorldPlugin {
             // .add_systems(Startup, )
             .add_systems(    Update,
                 (
-                    world_generation::load_near_chunks,
-                    world_generation::register_new_chunks,
-                    world_rendering::spawn_tile_sprites_for_new_chunks,
-                    world_generation::despawn_distant_chunks,
+                    (
+                        world_generation::load_near_chunks,
+                        world_generation::register_new_chunks,
+                        world_generation::despawn_distant_chunks,
+                        world_rendering::spawn_tile_sprites_for_new_chunks,
+                        daycycle::advance_game_time,
+                        daycycle::update_ambient_light
+                    ).chain(),
                     daycycle::advance_game_time,
-                    daycycle::update_ambient_light,
+                    daycycle::update_ambient_light
                 )
-                    .chain()
             );
     }
 }

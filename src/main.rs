@@ -8,6 +8,7 @@ mod debug;
 mod render;
 mod creatures;
 mod spawning;
+mod items;
 
 fn main() {
     App::new()
@@ -20,7 +21,8 @@ fn main() {
             debug::DebugPlugin,
             render::RenderPlugin,
             creatures::MobPlugin,
-            spawning::MobSpawningPlugin
+            spawning::MobSpawningPlugin,
+            items::ItemsPlugin
         ))
         .run();
 }

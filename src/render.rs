@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render};
+use bevy::prelude::*;
 
 pub struct RenderPlugin;
 
@@ -14,9 +14,8 @@ impl Plugin for RenderPlugin {
 
 #[derive(Component, Copy, Clone, PartialEq)]
 pub enum RenderLayer {
-    Background = 0,
+    // Background = 0,
     World = 1,
-    FoliageFront = 3,
     FoliageBack = 2,
     UI = 5,
 }
