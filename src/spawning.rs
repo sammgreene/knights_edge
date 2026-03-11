@@ -34,9 +34,5 @@ fn spawn_baseline(
         crate::render::RenderLayer::FoliageBack,
 
         Transform::from_xyz(10.0, 5.0, 0.0),
-        GlobalTransform::default(),
-        Visibility::Visible,
-        InheritedVisibility::default(),
-        ViewVisibility::default(),
     ));
 }

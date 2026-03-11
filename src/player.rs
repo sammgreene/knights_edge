@@ -41,10 +41,6 @@ pub fn spawn_player(
         RenderLayer::FoliageBack,
 
         Transform::from_xyz(0.0, 0.0, 0.0),
-        GlobalTransform::default(),
-        Visibility::Visible,
-        InheritedVisibility::default(),
-        ViewVisibility::default(),
         
         crate::physics::PhysicsObject,
         crate::physics::player_movement_physics::PlayerController
