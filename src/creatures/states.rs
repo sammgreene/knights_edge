@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::creatures::*;
+use crate::triggers;
 
 #[derive(Clone, Component)]
 pub struct Idle;

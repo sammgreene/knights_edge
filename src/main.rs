@@ -9,6 +9,7 @@ mod render;
 mod creatures;
 mod spawning;
 mod items;
+mod triggers;
 
 fn main() {
     App::new()
@@ -22,7 +23,8 @@ fn main() {
             render::RenderPlugin,
             creatures::MobPlugin,
             spawning::MobSpawningPlugin,
-            items::ItemsPlugin
+            items::ItemsPlugin,
+            bevy_spritesheet_animation::prelude::SpritesheetAnimationPlugin
         ))
         .run();
 }

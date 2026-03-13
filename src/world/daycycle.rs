@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_firefly::prelude::*;
 
-const MIDNIGHT: f64 = 86400.;
+// const MIDNIGHT: f64 = 86400.;
 const SUNRISE: f64 = 25200.;
 const SUNSET: f64 = 68400.;
 
@@ -14,7 +14,7 @@ pub struct GameTime {
 
 impl GameTime {
     pub fn default() -> Self {
-        Self { time: 0., speedup: 1000., start_time: SUNRISE - 1000.} // minute long days
+        Self { time: 0., speedup: 1000., start_time: SUNRISE } // minute long days
     }
     pub fn is_day(&self) -> bool {
         self.time > SUNRISE && self.time < SUNSET

@@ -1,7 +1,6 @@
 pub mod types;
 pub mod states;
 pub mod attributes;
-mod triggers;
 
 use bevy::prelude::*;
 use seldom_state::prelude::*;

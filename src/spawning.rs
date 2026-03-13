@@ -31,7 +31,7 @@ fn spawn_baseline(
             custom_size: Some(Vec2::splat(1.5)),
             ..default()
         },
-        crate::render::RenderLayer::FoliageBack,
+        crate::render::RenderLayer::Foliage,
 
         Transform::from_xyz(10.0, 5.0, 0.0),
     ));

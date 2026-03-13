@@ -50,6 +50,23 @@ pub struct DidFixedTimestepRunThisFrame(bool);
 /// A vector representing the player's velocity in the physics simulation.
 #[derive(Debug, Component, Clone, Copy, PartialEq, Default, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
+impl Velocity {
+    pub fn moving_left(&self) -> bool {
+        self.0.x < 0.0
+    }
+    pub fn moving_right(&self) -> bool {
+        self.0.x > 0.0
+    }
+    pub fn moving_up(&self) -> bool {
+        self.0.y > 0.0
+    }
+    pub fn moving_down(&self) -> bool {
+        self.0.y < 0.0
+    }
+    pub fn is_moving(&self) -> bool {
+        self.0 != Vec2::ZERO
+    }
+}
 
 /// The actual position of the player in the physics simulation.
 /// This is separate from the `Transform`, which is merely a visual representation.

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use seldom_state::prelude::*;
 use crate::creatures::*;
+use crate::triggers;
 
 #[derive(Component)]
 #[require(attributes::Health, attributes::Speed)]

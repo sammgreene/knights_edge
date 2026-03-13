@@ -4,12 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.18", features = ["debug"] }
+bevy = { version = "0.18.1", features = ["debug", "wav"] }
 sha2 = "*"
 fastnoise-lite = "*"
 dynfmt = { version = "0.1", features = ["curly"] }
 bevy_firefly = "0.18.0"
 seldom_state = "0.15.0"
+bevy_spritesheet_animation = "6.1.0"
 
 [patch.crates-io]
 seldom_state = { path = "seldom_state" }

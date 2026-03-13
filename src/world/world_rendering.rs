@@ -4,7 +4,7 @@ use bevy_firefly::prelude::*;
 
 use crate::world::world_generation:: { CHUNK_SIZE, Chunk, WorldTile, Foliage, TreeType };
 
-use crate::render;
+use crate::render::{self, OccludesPlayer, SortOffset};
 
 // Generates tiles for any newly created chunks on the frame they are added
 pub fn spawn_tile_sprites_for_new_chunks(
@@ -40,56 +40,78 @@ pub fn spawn_tile_sprites_for_new_chunks(
                     // Foliage Spawning
                     if chunk.foliage_data[chunk_x][chunk_y] == Foliage::None { continue; }
 
-                    let foliage_asset = match chunk.foliage_data[chunk_x][chunk_y] {
+                    let foliage = chunk.foliage_data[chunk_x][chunk_y];
+                    let (foliage_asset, size_x, size_y, sort_offset) = match foliage {
                         Foliage::Rock => 
-                            crate::asset_loading::load_random_asset_from_dir(
-                                "foliage/rocks/small_rock", 
-                                (world_x, world_y), 
-                                &asset_server
+                            (
+                                crate::asset_loading::load_random_asset_from_dir(
+                                    "foliage/rocks/small_rock", 
+                                    (world_x, world_y), 
+                                    &asset_server
+                                ),
+                                1.0,
+                                1.0,
+                                SortOffset(0.0)
                             ),
                         Foliage::Bush =>
-                            crate::asset_loading::load_random_asset_from_dir(
-                                "foliage/bush", 
-                                (world_x, world_y), 
-                                &asset_server
+                            (
+                                crate::asset_loading::load_random_asset_from_dir(
+                                    "foliage/bush", 
+                                    (world_x, world_y), 
+                                    &asset_server
+                                ),
+                                1.0,
+                                1.0,
+                                SortOffset(0.0)
                             ),
-                        Foliage::Tree(TreeType::Oak) => {
-                            crate::asset_loading::load_random_asset_from_dir(
-                                "foliage/tree", 
-                                (world_x, world_y), 
-                                &asset_server
-                            )
-                            // Handle::default()
-                        }
-                        Foliage::None => Handle::default(),
+                        Foliage::Tree(TreeType::Oak) =>
+                            (
+                                crate::asset_loading::load_random_asset_from_dir(
+                                    "foliage/tree", 
+                                    (world_x, world_y), 
+                                    &asset_server
+                                ),
+                                5.0,
+                                7.0,
+                                SortOffset(1.0) // hmmm
+                            ),
+                        Foliage::None => (Handle::default(),1.0,1.0,SortOffset(0.0))
                     };
-                    let mut new_x = chunk_x;
-                    let mut new_y = chunk_y;
-                    let mut size_x = 1.0;
-                    let mut size_y = 1.0;
-                    if chunk.foliage_data[chunk_x][chunk_y] == Foliage::Tree(TreeType::Oak) {
-                        size_x = 5.;
-                        size_y = 7.;
-                        new_y = chunk_y;
-                        new_x = chunk_x - 2;
-                    }
-                    parent.spawn((
-                        chunk.foliage_data[chunk_x][chunk_y], // Foliage
-                        Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
-                        render::RenderLayer::FoliageBack,// .with_offset(new_y as f32 - chunk_y as f32),
-                        Sprite {
-                            image: foliage_asset,
-                            custom_size: Some(Vec2::new(size_x, size_y)),
-                            ..default()
-                        },
-                        Anchor::BOTTOM_LEFT,
-                        Transform {
-                            translation: Vec3::new(new_x as f32, new_y as f32, 0.0),
-                            rotation,
-                            ..default()
-                        },
-                    ));
 
+                    if foliage == Foliage::Tree(TreeType::Oak) {
+                        parent.spawn((
+                            OccludesPlayer,
+                            foliage,
+                            Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
+                            render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
+                            Sprite {
+                                image: foliage_asset,
+                                custom_size: Some(Vec2::new(size_x, size_y)),
+                                ..default()
+                            },
+                            Anchor(Vec2 { x: 0.1, y: -0.5 }),
+                            Transform {
+                                translation: Vec3::new(chunk_x as f32, chunk_y as f32, 0.0),
+                                ..default()
+                            },
+                        ));
+                    } else {
+                        parent.spawn((
+                            foliage,
+                            Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
+                            render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
+                            Sprite {
+                                image: foliage_asset,
+                                custom_size: Some(Vec2::new(size_x, size_y)),
+                                ..default()
+                            },
+                            Anchor::BOTTOM_LEFT,
+                            Transform {
+                                translation: Vec3::new(chunk_x as f32, chunk_y as f32, 0.0),
+                                ..default()
+                            },
+                        ));
+                    }
                 }
             }
 
@@ -128,4 +150,66 @@ fn get_tile_asset_and_rotation(asset_server: &Res<AssetServer>, chunk: &Chunk, x
             Quat::IDENTITY,
         )
     }
+}
+
+fn get_foliage_entity(foliage: Foliage, world_x: i32, world_y: i32, chunk_x: i32, chunk_y: i32, asset_server: &AssetServer) -> impl Bundle {
+    let (foliage_asset, size_x, size_y, offset_x, offset_y, sort_offset) = match foliage {
+        Foliage::Rock => 
+            (
+                crate::asset_loading::load_random_asset_from_dir(
+                    "foliage/rocks/small_rock", 
+                    (world_x, world_y), 
+                    &asset_server
+                ),
+                1.0,
+                1.0,
+                0.0,
+                0.0,
+                SortOffset(0.0)
+            ),
+        Foliage::Bush =>
+            (
+                crate::asset_loading::load_random_asset_from_dir(
+                    "foliage/bush", 
+                    (world_x, world_y), 
+                    &asset_server
+                ),
+                1.0,
+                1.0,
+                0.0,
+                0.0,
+                SortOffset(0.0)
+            ),
+        Foliage::Tree(TreeType::Oak) =>
+            (
+                crate::asset_loading::load_random_asset_from_dir(
+                    "foliage/tree", 
+                    (world_x, world_y), 
+                    &asset_server
+                ),
+                5.0,
+                7.0,
+                -2.0,
+                0.0,
+                SortOffset(1.0) // hmmm
+            ),
+        Foliage::None => (Handle::default(),1.0,1.0,0.,0.,SortOffset(0.0))
+    };
+
+    (
+        OccludesPlayer,
+        foliage,
+        Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
+        render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
+        Sprite {
+            image: foliage_asset,
+            custom_size: Some(Vec2::new(size_x, size_y)),
+            ..default()
+        },
+        Anchor::BOTTOM_LEFT,
+        Transform {
+            translation: Vec3::new(chunk_x as f32 + offset_x, chunk_y as f32 + offset_y, 0.0),
+            ..default()
+        },
+    );
 }
