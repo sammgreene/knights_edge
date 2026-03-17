@@ -27,10 +27,10 @@ pub struct SortOffset(pub f32);
 pub struct OccludesPlayer;
 
 pub fn y_sort(
-    q: Query<(&GlobalTransform, &mut Transform, &RenderLayer, &Sprite, Option<&SortOffset>), Without<crate::player::Player>>,
+    q: Query<(&GlobalTransform, &mut Transform, &RenderLayer, Option<&SortOffset>), Without<crate::player::Player>>,
     players: Query<(&GlobalTransform, &mut Transform, &RenderLayer), With<crate::player::Player>>,
 ) {
-    for (gt, mut tf, layer, sprite, sort_offset) in q {
+    for (gt, mut tf, layer, sort_offset) in q {
         let world_y = gt.translation().y;
         let offset = sort_offset.map(|s| s.0).unwrap_or(0.0);
         tf.translation.z = (layer.clone() as i32 as f32) - (world_y + offset) * 0.001;

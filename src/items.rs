@@ -34,8 +34,11 @@ impl ItemStack {
             "Tried to spawn {} of {:?}, max is {}",
             count, kind, kind.max()
         );
-        let count = u8::min(count, kind.max());
-        Self { kind, count }
+        // let count = u8::min(count, kind.max());
+        Self { 
+            kind,
+            count 
+        }
     }
 }
 
@@ -157,4 +160,5 @@ fn animate_bobbing(
 
 fn test_items(mut commands: Commands, asset_server: Res<AssetServer>) {
     ItemType::Apple.spawn(2, vec3(-10.,-3.5,0.0), &mut commands, &asset_server);
+    ItemType::BasicSword.spawn(2, vec3(10.,-3.5,0.0), &mut commands, &asset_server);
 }

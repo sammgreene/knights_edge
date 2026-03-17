@@ -1,6 +1,7 @@
 use bevy::{prelude::*, sprite::Anchor};
 pub mod player_camera;
-use bevy_firefly::sprites;
+use bevy_firefly::lights::PointLight2d;
+// use bevy_firefly::sprites;
 use player_camera::*;
 use crate::render::RenderLayer;
 use bevy_spritesheet_animation::prelude::*;
@@ -34,7 +35,7 @@ pub struct PlayerMarker;
 struct PlayerAnimations {
     idle: Handle<Animation>,
     run: Handle<Animation>,
-    attack: Handle<Animation>
+    // attack: Handle<Animation>
 }
 
 #[derive(Component)]
@@ -64,14 +65,14 @@ pub fn spawn_player(
 
     let run_animation_handle = animations.add(run_animation);
 
-    let attack_animation = spritesheet.create_animation().add_row(18).build();
+    // let attack_animation = spritesheet.create_animation().add_row(18).build();
 
-    let attack_animation_handle = animations.add(attack_animation);
+    // let attack_animation_handle = animations.add(attack_animation);
 
     commands.insert_resource(PlayerAnimations {
         idle: idle_animation_handle.clone(),
         run: run_animation_handle,
-        attack: attack_animation_handle,
+        // attack: attack_animation_handle,
     });
 
     let mut sprite = spritesheet.with_size_hint(288,1152).sprite(&mut atlas_layouts);
@@ -84,6 +85,12 @@ pub fn spawn_player(
             occlusion_radius: 4.,
             min_alpha: 0.3,
             max_alpha: 0.9
+        },
+        PointLight2d {
+            color: Color::hsl(25., 0.9, 0.5),
+            intensity: 0.3,
+            range: 4.5,
+            ..Default::default()
         },
 
         SpatialListener::new(0.5),

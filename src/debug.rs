@@ -15,7 +15,7 @@ pub struct DebugMenu {
     pub loaded_chunk_count: usize,
     pub total_spawned_entites: u32,
     pub player_coords: Vec3,
-    pub current_biome: world_generation::Biome
+    // pub current_biome: world_generation::Biome
 }
 impl DebugMenu {
     fn default() -> Self {
@@ -31,7 +31,7 @@ impl DebugMenu {
             loaded_chunk_count: 0,
             total_spawned_entites: 0,
             player_coords: Vec3::new(0.,0., 0.),
-            current_biome: world_generation::Biome::Forest,
+            // current_biome: world_generation::Biome::Forest,
         }
     }
     fn with_enabled(mut self) -> Self {
