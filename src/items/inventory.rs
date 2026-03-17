@@ -2,7 +2,7 @@ use bevy::{audio::Volume, prelude::*};
 use crate::items;
 use std::collections::HashSet;
 
-const PICKUP_DIST: f32 = 2.0;
+const PICKUP_DIST: f32 = 1.5;
 
 #[derive(Component)]
 pub struct Inventory {

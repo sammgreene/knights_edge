@@ -91,7 +91,7 @@ impl ItemType {
             Visibility::Visible,
             PointLight2d {
                 color: Color::srgb(1.0, 0.6, 1.0),
-                range: 0.5,
+                range: 0.6,
                 intensity: 0.2,
                 offset: vec3(0.0,0.3,0.0),
                 ..default()

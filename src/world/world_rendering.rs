@@ -73,7 +73,7 @@ pub fn spawn_tile_sprites_for_new_chunks(
                                 ),
                                 5.0,
                                 7.0,
-                                SortOffset(1.0) // hmmm
+                                SortOffset(0.0) // hmmm
                             ),
                         Foliage::None => (Handle::default(),1.0,1.0,SortOffset(0.0))
                     };
@@ -81,6 +81,7 @@ pub fn spawn_tile_sprites_for_new_chunks(
                     if foliage == Foliage::Tree(TreeType::Oak) {
                         parent.spawn((
                             OccludesPlayer,
+                            sort_offset,
                             foliage,
                             Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
                             render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
@@ -98,6 +99,7 @@ pub fn spawn_tile_sprites_for_new_chunks(
                     } else {
                         parent.spawn((
                             foliage,
+                            sort_offset,
                             Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
                             render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
                             Sprite {
