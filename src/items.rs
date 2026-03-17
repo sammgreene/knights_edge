@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_firefly::lights::PointLight2d;
 use crate::physics::PhysicsObject;
-use crate::render::RenderLayer;
+use crate::render::*;
 
 pub mod inventory;
 mod actions;
@@ -16,8 +16,10 @@ impl Plugin for ItemsPlugin {
         .add_systems(Update, (
             // set_sprite_for_dropped_items,
             inventory::remove_despawned_items_from_inventorys,
-            inventory::pickup_nearby_items,
+            inventory::inventories_pickup_nearby_items,
             animate_bobbing,
+            debug_dropped_items,
+            // render_just_dropped_items,
         ));
     }
 }
@@ -72,7 +74,7 @@ impl ItemType {
             custom_size: Some(Vec2::splat(1.0)),
             ..default()
             },
-            crate::render::SortOffset(0.1)
+            SortOffset(-0.25)
         )
     }
 
@@ -84,6 +86,7 @@ impl ItemType {
             self.sprite(asset_server),
             RenderLayer::Foliage,
             Anchor::BOTTOM_CENTER,
+            BobOffset{ elapsed: 0.0 },
 
             PhysicsObject,
             Transform::from_translation(translation),
@@ -130,18 +133,23 @@ impl ItemType {
 
 #[derive(Component)]
 pub struct Dropped;
+#[derive(Component)]
+pub struct BobOffset {
+    pub elapsed: f32,
+}
 
 const BOB_SPEED: f32 = 2.0;
 const BOB_AMPLITUDE: f32 = 0.15;
 const SQUASH_AMPLITUDE: f32 = 0.05;
 
 fn animate_bobbing(
-    mut dropped_items: Query<(&mut Transform, &mut Sprite, &Children), With<Dropped>>,
+    mut dropped_items: Query<(&mut Transform, &mut Sprite, &Children, &mut BobOffset), With<Dropped>>,
     mut shadows: Query<&mut Transform, (With<ItemShadow>, Without<Dropped>)>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut sprite, children) in &mut dropped_items {
-        let t = (time.elapsed_secs() * BOB_SPEED).sin().powf(2.0);
+    for (mut transform, mut sprite, children, mut bob_offset) in &mut dropped_items {
+        bob_offset.elapsed += time.delta_secs();
+        let t = (bob_offset.elapsed * BOB_SPEED).sin().powf(2.0);
         let bob = t * BOB_AMPLITUDE;
         transform.translation.y += bob;
         sprite.custom_size = Some(Vec2::new(
@@ -158,7 +166,24 @@ fn animate_bobbing(
     }
 }
 
+fn debug_dropped_items(
+    items: Query<(Entity, &Transform), Added<Dropped>>,
+) {
+    for (entity, transform) in &items {
+        info!("Dropped item {:?} is at {:?}", entity, transform.translation);
+    }
+}
+
 fn test_items(mut commands: Commands, asset_server: Res<AssetServer>) {
     ItemType::Apple.spawn(2, vec3(-10.,-3.5,0.0), &mut commands, &asset_server);
     ItemType::BasicSword.spawn(2, vec3(10.,-3.5,0.0), &mut commands, &asset_server);
 }
+
+// fn render_just_dropped_items(
+//     dropped_items: Query<(&mut Visibility, &mut PointLight2d), Added<Dropped>>
+// ) {
+//     for (mut visibility, mut light) in dropped_items {
+//         *visibility = Visibility::Visible;
+//         light.intensity = 0.2;
+//     }
+// }

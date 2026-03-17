@@ -28,7 +28,7 @@ pub struct OccludesPlayer;
 
 pub fn y_sort(
     q: Query<(&GlobalTransform, &mut Transform, &RenderLayer, Option<&SortOffset>), Without<crate::player::Player>>,
-    players: Query<(&GlobalTransform, &mut Transform, &RenderLayer), With<crate::player::Player>>,
+    players: Query<(&GlobalTransform, &mut Transform, &RenderLayer, Option<&SortOffset>), With<crate::player::Player>>,
 ) {
     for (gt, mut tf, layer, sort_offset) in q {
         let world_y = gt.translation().y;
@@ -36,9 +36,9 @@ pub fn y_sort(
         tf.translation.z = (layer.clone() as i32 as f32) - (world_y + offset) * 0.001;
     }
 
-    for (gt, mut tf, layer) in players {
+    for (gt, mut tf, layer, sort_offset) in players {
         let world_y = gt.translation().y;
-        let foot_offset = 0.2; // tweak this
+        let foot_offset = sort_offset.map(|s| s.0).unwrap_or(0.2);
         tf.translation.z = (layer.clone() as i32 as f32) - (world_y - foot_offset) * 0.001;
     }
 }

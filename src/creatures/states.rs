@@ -75,9 +75,9 @@ pub fn chasing(
 }
 
 pub fn idle(
-    mut idlers: Query<(&mut Velocity, &PhysicalTranslation, &attributes::Speed, &Idle)>
+    mut idlers: Query<(&mut Velocity, &PhysicalTranslation, &attributes::Speed)>
 ) {
-    for (mut velocity, idler_translation, speed, idle) in &mut idlers {
+    for (mut velocity, idler_translation, speed) in &mut idlers {
         velocity.0 = Vec2::ZERO;
     }
 }

@@ -1,9 +1,11 @@
+use bevy::input::common_conditions::input_just_pressed;
 use bevy::{prelude::*, sprite::Anchor};
 pub mod player_camera;
 use bevy_firefly::lights::PointLight2d;
 // use bevy_firefly::sprites;
 use player_camera::*;
-use crate::render::RenderLayer;
+use crate::render::*;
+use crate::items::*;
 use bevy_spritesheet_animation::prelude::*;
 
 pub struct PlayerPlugin;
@@ -17,7 +19,8 @@ impl Plugin for PlayerPlugin {
             .add_systems(Update, (
                 player_camera::update_camera,
                 update_player_marker,
-                update_player_animation
+                update_player_animation,
+                drop_held_item.run_if(input_just_pressed(KeyCode::KeyQ)).before(TransformSystems::Propagate)
             ));
     }
 }
@@ -92,10 +95,13 @@ pub fn spawn_player(
             range: 4.5,
             ..Default::default()
         },
+        crate::items::inventory::Inventory::new(1),
+
 
         SpatialListener::new(0.5),
 
         sprite,
+        SortOffset(0.2),
 
         SpritesheetAnimation::new(idle_animation_handle),
         RenderLayer::Foliage,
@@ -106,7 +112,6 @@ pub fn spawn_player(
         
         crate::physics::PhysicsObject,
         crate::physics::player_movement_physics::PlayerController,
-        crate::items::inventory::Inventory::new(16)
     ));
 
     // --- Debug Player MarkerThing ---
@@ -156,4 +161,30 @@ fn update_player_animation(
     else {
         player_sprite.flip_x = false;
     }
+}
+
+fn drop_held_item(
+    player: Single<(&mut inventory::Inventory, &Transform), With<Player>>,
+    mut commands: Commands,
+    mut visibility: Query<(&mut Visibility, &mut PointLight2d)>,
+) {
+    let (mut player_inventory, player_transform) = player.into_inner();
+    let held_item_index = player_inventory.selected_item;
+    let held_item = player_inventory.items[held_item_index];
+
+    info!("Dropping item at position: {:?}", player_transform.translation);
+    info!("Item entity: {:?}", held_item);
+    
+    commands.entity(held_item)
+        .insert(Dropped)
+        .insert(*player_transform)
+        .insert(GlobalTransform::from(*player_transform))
+        .insert(BobOffset { elapsed: 0.0 });
+    
+    if let Ok((mut vis, mut light)) = visibility.get_mut(held_item) {
+        *vis = Visibility::Visible;
+        light.intensity = 0.2; // whatever your default intensity is
+    }
+    
+    player_inventory.items.remove(held_item_index);
 }

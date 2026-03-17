@@ -1,5 +1,5 @@
 use bevy::{audio::Volume, prelude::*};
-use crate::items;
+use crate::items::*;
 use std::collections::HashSet;
 
 const PICKUP_DIST: f32 = 1.5;
@@ -7,7 +7,8 @@ const PICKUP_DIST: f32 = 1.5;
 #[derive(Component)]
 pub struct Inventory {
     pub items: Vec<Entity>,
-    slot_count: usize
+    slot_count: usize,
+    pub selected_item: usize
 }
 impl Inventory {
     fn is_full(&self) -> bool {
@@ -16,24 +17,25 @@ impl Inventory {
     pub fn new(slot_count: usize) -> Self {
         Self {
             items: vec![],
-            slot_count
+            slot_count,
+            selected_item: 0
         }
     }
 }
 
 pub fn remove_despawned_items_from_inventorys(
     mut inventories: Query<&mut Inventory>,
-    items: Query<(), With<items::ItemStack>>,
+    items: Query<(), With<ItemStack>>,
 ) {
     for mut inventory in &mut inventories {
         inventory.items.retain(|e| items.contains(*e));
     }
 }
 
-pub fn pickup_nearby_items(
+pub fn inventories_pickup_nearby_items(
     inventories: Query<(&mut Inventory, &Transform)>,
-    items: Query<(Entity, &Transform, &items::ItemStack), With<items::Dropped>>,
-    mut visibility: Query<(&mut Visibility, &mut bevy_firefly::prelude::PointLight2d)>,
+    items: Query<(Entity, &Transform, &ItemStack), With<Dropped>>,
+    mut visibility: Query<(&mut Visibility, &mut PointLight2d)>,
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
@@ -54,7 +56,7 @@ pub fn pickup_nearby_items(
                 ));
                 inventory.items.push(item);
                 claimed.insert(item);
-                commands.entity(item).remove::<items::Dropped>();
+                commands.entity(item).remove::<Dropped>();
             }
         }
     }
