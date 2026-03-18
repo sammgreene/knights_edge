@@ -9,8 +9,4 @@ sha2 = "*"
 fastnoise-lite = "*"
 dynfmt = { version = "0.1", features = ["curly"] }
 bevy_firefly = "0.18.0"
-seldom_state = "0.15.0"
 bevy_spritesheet_animation = "6.1.0"
-
-[patch.crates-io]
-seldom_state = { path = "seldom_state" }

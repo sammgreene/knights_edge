@@ -2995,7 +2995,6 @@ dependencies = [
  "bevy_spritesheet_animation",
  "dynfmt",
  "fastnoise-lite",
- "seldom_state",
  "sha2",
 ]
 
@@ -4190,20 +4189,6 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit",
  "tiny-skia",
-]
-
-[[package]]
-name = "seldom_state"
-version = "0.15.0"
-dependencies = [
- "bevy_app",
- "bevy_derive",
- "bevy_ecs",
- "bevy_log",
- "bevy_math",
- "bevy_utils",
- "either",
- "variadics_please",
 ]
 
 [[package]]

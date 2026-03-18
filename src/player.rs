@@ -96,7 +96,7 @@ pub fn spawn_player(
             range: 4.5,
             ..Default::default()
         },
-        crate::items::inventory::Inventory::new(1),
+        crate::items::inventory::Inventory::new(16),
 
 
         SpatialListener::new(0.5),

@@ -7,8 +7,6 @@ mod physics;
 mod asset_loading;
 mod debug;
 mod render;
-mod creatures;
-mod spawning;
 mod items;
 mod triggers;
 
@@ -24,8 +22,6 @@ fn main() {
             physics::PhysicsPlugin,
             debug::DebugPlugin,
             render::RenderPlugin,
-            creatures::MobPlugin,
-            spawning::MobSpawningPlugin,
             items::ItemsPlugin,
         ))
         .run();
