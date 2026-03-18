@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_firefly::prelude::*;
+use bevy_spritesheet_animation::prelude::*;
 mod world;
 mod player;
 mod physics;
@@ -16,6 +17,8 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             FireflyPlugin,
+            SpritesheetAnimationPlugin,
+            
             world::WorldPlugin,
             player::PlayerPlugin,
             physics::PhysicsPlugin,
@@ -24,7 +27,6 @@ fn main() {
             creatures::MobPlugin,
             spawning::MobSpawningPlugin,
             items::ItemsPlugin,
-            bevy_spritesheet_animation::prelude::SpritesheetAnimationPlugin
         ))
         .run();
 }

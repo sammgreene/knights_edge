@@ -4,6 +4,7 @@ pub mod player_camera;
 use bevy_firefly::lights::PointLight2d;
 // use bevy_firefly::sprites;
 use player_camera::*;
+use crate::physics::*;
 use crate::render::*;
 use crate::items::*;
 use bevy_spritesheet_animation::prelude::*;
@@ -167,23 +168,22 @@ fn drop_held_item(
     player: Single<(&mut inventory::Inventory, &Transform), With<Player>>,
     mut commands: Commands,
     mut visibility: Query<(&mut Visibility, &mut PointLight2d)>,
+    mut physics: Query<(&mut PhysicalTranslation, &mut PreviousPhysicalTranslation)>,
 ) {
     let (mut player_inventory, player_transform) = player.into_inner();
     let held_item_index = player_inventory.selected_item;
     let held_item = player_inventory.items[held_item_index];
+    let pos = Vec2::new(player_transform.translation.x, player_transform.translation.y);
 
-    info!("Dropping item at position: {:?}", player_transform.translation);
-    info!("Item entity: {:?}", held_item);
-    
+    crate::physics::teleport_physics_object(held_item, pos, &mut physics);
+
     commands.entity(held_item)
         .insert(Dropped)
-        .insert(*player_transform)
-        .insert(GlobalTransform::from(*player_transform))
         .insert(BobOffset { elapsed: 0.0 });
     
     if let Ok((mut vis, mut light)) = visibility.get_mut(held_item) {
         *vis = Visibility::Visible;
-        light.intensity = 0.2; // whatever your default intensity is
+        light.intensity = 0.2;
     }
     
     player_inventory.items.remove(held_item_index);

@@ -80,7 +80,7 @@ pub struct PhysicalTranslation(pub Vec2);
 /// The value [`PhysicalTranslation`] had in the last fixed timestep.
 /// Used for interpolation in the `interpolate_rendered_transform` system.
 #[derive(Debug, Component, Clone, Copy, PartialEq, Default, Deref, DerefMut)]
-struct PreviousPhysicalTranslation(Vec2);
+pub(crate) struct PreviousPhysicalTranslation(Vec2);
 
 // My own requiring component to avoid repeating multiple components in system queries
 #[derive(Component, Default)]
@@ -160,5 +160,16 @@ fn initialize_physics_objects(
         let pos = Vec2::new(transform.translation.x, transform.translation.y);
         phys.0 = pos;
         prev.0 = pos;
+    }
+}
+
+pub fn teleport_physics_object(
+    entity: Entity,
+    position: Vec2,
+    query: &mut Query<(&mut PhysicalTranslation, &mut PreviousPhysicalTranslation)>,
+) {
+    if let Ok((mut phys, mut prev)) = query.get_mut(entity) {
+        phys.0 = position;
+        prev.0 = position;
     }
 }

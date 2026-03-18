@@ -18,7 +18,6 @@ impl Plugin for ItemsPlugin {
             inventory::remove_despawned_items_from_inventorys,
             inventory::inventories_pickup_nearby_items,
             animate_bobbing,
-            debug_dropped_items,
             // render_just_dropped_items,
         ));
     }
@@ -163,14 +162,6 @@ fn animate_bobbing(
                 shadow_tf.translation.y = -0.2 - bob;
             }
         }
-    }
-}
-
-fn debug_dropped_items(
-    items: Query<(Entity, &Transform), Added<Dropped>>,
-) {
-    for (entity, transform) in &items {
-        info!("Dropped item {:?} is at {:?}", entity, transform.translation);
     }
 }
 
