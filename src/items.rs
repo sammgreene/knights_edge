@@ -18,6 +18,8 @@ impl Plugin for ItemsPlugin {
             inventory::remove_despawned_items_from_inventorys,
             inventory::inventories_pickup_nearby_items,
             animate_bobbing,
+            make_dropped_items_visible,
+            tick_item_pickup_cooldowns,
             // render_just_dropped_items,
         ));
     }
@@ -42,9 +44,6 @@ impl ItemStack {
         }
     }
 }
-
-#[derive(Component)]
-pub struct ItemShadow;
 
 #[derive(Debug, Clone, Copy)]
 enum ItemType {
@@ -136,6 +135,13 @@ pub struct Dropped;
 pub struct BobOffset {
     pub elapsed: f32,
 }
+#[derive(Component)]
+pub struct ItemShadow;
+#[derive(Component)]
+pub struct PickupCooldown {
+    pub effected_entity: Entity,
+    pub timer: Timer
+}
 
 const BOB_SPEED: f32 = 2.0;
 const BOB_AMPLITUDE: f32 = 0.15;
@@ -170,11 +176,24 @@ fn test_items(mut commands: Commands, asset_server: Res<AssetServer>) {
     ItemType::BasicSword.spawn(2, vec3(10.,-3.5,0.0), &mut commands, &asset_server);
 }
 
-// fn render_just_dropped_items(
-//     dropped_items: Query<(&mut Visibility, &mut PointLight2d), Added<Dropped>>
-// ) {
-//     for (mut visibility, mut light) in dropped_items {
-//         *visibility = Visibility::Visible;
-//         light.intensity = 0.2;
-//     }
-// }
+fn make_dropped_items_visible(
+    dropped_items: Query<(&mut Visibility, &mut PointLight2d), Added<Dropped>>
+) {
+    for (mut visiblity, mut light) in dropped_items {
+        *visiblity = Visibility::Visible;
+        light.intensity = 0.2;
+    }
+}
+
+fn tick_item_pickup_cooldowns(
+    items: Query<(Entity, &mut PickupCooldown)>,
+    mut commands: Commands,
+    time: Res<Time>
+) {
+    for (entity, mut cooldown) in items {
+        cooldown.timer.tick(time.delta());
+        if cooldown.timer.is_finished() {
+            commands.entity(entity).remove::<PickupCooldown>();
+        }
+    }
+}

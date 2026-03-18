@@ -165,12 +165,11 @@ fn update_player_animation(
 }
 
 fn drop_held_item(
-    player: Single<(&mut inventory::Inventory, &Transform), With<Player>>,
+    player: Single<(Entity, &mut inventory::Inventory, &Transform), With<Player>>,
     mut commands: Commands,
-    mut visibility: Query<(&mut Visibility, &mut PointLight2d)>,
     mut physics: Query<(&mut PhysicalTranslation, &mut PreviousPhysicalTranslation)>,
 ) {
-    let (mut player_inventory, player_transform) = player.into_inner();
+    let (player, mut player_inventory, player_transform) = player.into_inner();
     let held_item_index = player_inventory.selected_item;
     let held_item = player_inventory.items[held_item_index];
     let pos = Vec2::new(player_transform.translation.x, player_transform.translation.y);
@@ -178,13 +177,13 @@ fn drop_held_item(
     crate::physics::teleport_physics_object(held_item, pos, &mut physics);
 
     commands.entity(held_item)
+        .remove::<AudioPlayer>()
+        .remove::<PlaybackSettings>()
+        .remove::<AudioSink>()
         .insert(Dropped)
-        .insert(BobOffset { elapsed: 0.0 });
+        .insert(BobOffset { elapsed: 0.0 })
+        .insert(PickupCooldown { effected_entity: player, timer: Timer::from_seconds(2.0, TimerMode::Once) });
     
-    if let Ok((mut vis, mut light)) = visibility.get_mut(held_item) {
-        *vis = Visibility::Visible;
-        light.intensity = 0.2;
-    }
     
     player_inventory.items.remove(held_item_index);
 }

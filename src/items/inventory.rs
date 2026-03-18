@@ -33,20 +33,26 @@ pub fn remove_despawned_items_from_inventorys(
 }
 
 pub fn inventories_pickup_nearby_items(
-    inventories: Query<(&mut Inventory, &Transform)>,
-    items: Query<(Entity, &Transform, &ItemStack), With<Dropped>>,
+    inventories: Query<(Entity, &mut Inventory, &Transform)>,
+    items: Query<(Entity, &Transform, &ItemStack, Option<&PickupCooldown>), With<Dropped>>,
     mut visibility: Query<(&mut Visibility, &mut PointLight2d)>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
 ) {
     let mut claimed: HashSet<Entity> = HashSet::new();
-    for (mut inventory, inventory_pos) in inventories {
-        for (item, item_position, item_stack) in &items {
+    for (inventory_entity, mut inventory, inventory_pos) in inventories {
+        for (item, item_position, item_stack, cooldown) in items {
             if inventory.is_full() {
                 break;
             }
             if claimed.contains(&item) {
                 continue;
+            }
+            if cooldown.is_some() {
+                let cooldown = cooldown.unwrap();
+                if cooldown.effected_entity == inventory_entity {
+                    continue;
+                }
             }
             if item_position.translation.distance(inventory_pos.translation) < PICKUP_DIST {
                 info!("item picked up: {:?}", item_stack);
