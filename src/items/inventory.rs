@@ -8,17 +8,31 @@ const PICKUP_DIST: f32 = 1.5;
 pub struct Inventory {
     pub items: Vec<Entity>,
     slot_count: usize,
-    pub selected_item: usize
+    pub selected_item: Option<usize>
 }
 impl Inventory {
-    fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.items.len() >= self.slot_count
+    }
+    pub fn is_empty(&self) -> bool {
+        self.items.len() == 0
+    }
+    pub fn selecting_valid_item(&self) -> bool {
+        if self.selected_item.is_none() { return false }
+        if self.is_empty() { return false }
+        if self.selected_item.unwrap() >= self.items.len() { return false }
+        true
+    }
+    pub fn select_valid_item(&mut self) {
+        if self.selecting_valid_item() { return }
+        if self.is_empty() { self.selected_item = None; return }
+        self.selected_item = Some(self.items.len() - 1)
     }
     pub fn new(slot_count: usize) -> Self {
         Self {
             items: vec![],
             slot_count,
-            selected_item: 0
+            selected_item: None
         }
     }
 }
@@ -61,6 +75,7 @@ pub fn inventories_pickup_nearby_items(
                     PlaybackSettings::ONCE.with_volume(Volume::Linear(0.2))
                 ));
                 inventory.items.push(item);
+                if inventory.selected_item.is_none() { inventory.selected_item = Some(0) }
                 claimed.insert(item);
                 commands.entity(item).remove::<Dropped>();
             }

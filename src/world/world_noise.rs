@@ -6,7 +6,7 @@ use crate::world::world_lib::numeric_seed_from_string;
 pub struct WorldNoise {
     pub seed: u64,
     pub altitude: FastNoiseLite,
-    // pub vegetation: FastNoiseLite,
+    pub vegetation: FastNoiseLite,
     pub temp: FastNoiseLite,
     pub moisture: FastNoiseLite,
     // pub mountain_mask: FastNoiseLite,
@@ -24,10 +24,10 @@ impl WorldNoise {
         altitude.set_frequency(Some(0.04)); // VERY large features
         altitude.octaves = 2;
 
-        // let mut vegetation = FastNoiseLite::new();
-        // vegetation.set_seed(Some((generator.seed + 1337) as i32)); // offset for variation
-        // vegetation.set_noise_type(Some(NoiseType::Perlin));
-        // vegetation.set_frequency(Some(0.8)); // high frequency
+        let mut vegetation = FastNoiseLite::new();
+        vegetation.set_seed(Some((seed + 1337) as i32)); // offset for variation
+        vegetation.set_noise_type(Some(NoiseType::Perlin));
+        vegetation.set_frequency(Some(0.1)); // high frequency
 
         let mut temp = FastNoiseLite::new();
         temp.set_seed(Some((seed + 1337) as i32)); // offset for variation
@@ -35,17 +35,22 @@ impl WorldNoise {
         temp.set_frequency(Some(0.01));
 
         let mut moisture = FastNoiseLite::new();
-        moisture.set_seed(Some((seed + 1337) as i32)); // offset for variation
+        moisture.set_seed(Some((seed + 2337) as i32)); // offset for variation
         moisture.set_noise_type(Some(NoiseType::Perlin));
         moisture.set_frequency(Some(0.01));
 
         Self {
             seed,
             altitude,
-            // vegetation,
+            vegetation,
             temp,
             moisture,
         }
+    }
+
+    // get vegetation function
+    pub fn get_vegetation(&self, x: i32, y: i32) -> f32 {
+        return self.vegetation.get_noise_2d(x as f32, y as f32) + self.white_noise_2d(x, y) * 0.3;
     }
 
     pub fn get_climate(&self, x: f32, y: f32) -> (f32, f32, f32) {

@@ -168,11 +168,12 @@ fn gen_chunk(
             let world_x = coord.x * CHUNK_SIZE as i32 + chunk_x as i32;
             let world_y = coord.y * CHUNK_SIZE as i32 + chunk_y as i32;
 
-            let vegetation_value = noise.white_noise_2d(world_x, world_y);
+            let vegetation_value = noise.get_vegetation(world_x, world_y);
+            let white_noise = noise.white_noise_2d(world_x, world_y);
 
             let biome = biome_data[chunk_x][chunk_y];
 
-            foliage_data[chunk_x][chunk_y] = foliage_from_biome_and_vegetation_amp(biome, vegetation_value);
+            foliage_data[chunk_x][chunk_y] = foliage_from_biome_and_vegetation_amp(biome, vegetation_value, white_noise);
         }
     }
 
@@ -222,54 +223,21 @@ pub fn register_new_chunks(
 }
 
 
-fn foliage_from_biome_and_vegetation_amp(biome: Biome, vegetation_amp: f32) -> Foliage {
-    let (
-        tree_value,
-        bush_value,
-        stone_value,
-        _,
-    ) = match biome {
-        Biome::Forest => (
-            0.01,
-            0.3,
-            0.05,
-            0.0,
-        ),
-        Biome::Snow => (
-            0.02,
-            0.0,
-            0.1,
-            0.0,
-        ),
-        Biome::Ocean => (
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        ),
-        Biome::Desert => (
-            0.02,
-            0.02,
-            0.1,
-            0.0
-        ),
-        _ => (
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        )
-    };
-
-    if vegetation_amp > 1.0 - tree_value {
-        Foliage::Tree(TreeType::Oak)
-    } else if vegetation_amp > 1.0 - tree_value - bush_value {
-        Foliage::Bush
-    } else if vegetation_amp > 1.0 - tree_value - bush_value - stone_value {
-        Foliage::Rock
-    } else {
-        Foliage::None
+fn foliage_from_biome_and_vegetation_amp(biome: Biome, vegetation_value: f32, white_noise: f32) -> Foliage {
+    match biome {
+        Biome::Forest => forest_foliage(vegetation_value, white_noise),
+        _ => Foliage::None
     }
+}
+
+fn forest_foliage(vegetation_value: f32, white_noise: f32) -> Foliage {
+    if vegetation_value > 0.3 && white_noise > 0.25 {
+        Foliage::Bush
+    }
+    else if vegetation_value < 0.2 && white_noise > 0.9 {
+        Foliage::Tree(TreeType::Oak)
+    }
+    else { Foliage::None }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -317,7 +285,7 @@ const BIOMES: &[BiomeDef] = &[
     }
 ];
 
-const SEA_LEVEL: f32 = 0.35;
+const SEA_LEVEL: f32 = 0.30;
 const BEACH_BAND: f32 = 0.002;
 const SNOW_ALTITUDE: f32 = 0.95;
 

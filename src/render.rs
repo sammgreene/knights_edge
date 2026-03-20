@@ -56,7 +56,7 @@ fn update_foliage_occlusion(
 
         for (gt, mut sprite) in &mut foliage {
             let tree_pos = gt.translation().truncate();
-            let tree_center_y = tree_pos.y + 3.5;
+            let tree_center_y = tree_pos.y + sprite.custom_size.unwrap().y / 2.;
 
             let dx = (player_pos.y - tree_center_y).abs();
             let dy_below = (player_pos.x - tree_pos.x).min(0.0); // negative when below base

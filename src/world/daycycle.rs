@@ -5,6 +5,9 @@ use bevy_firefly::prelude::*;
 const SUNRISE: f64 = 25200.;
 const SUNSET: f64 = 68400.;
 
+const DAY_BRIGHTNESS: Color = Color::hsl(52., 1.0, 0.901);
+const NIGHT_BRIGHTNESS: Color = Color::hsl(199., 0.437, 0.23);
+
 #[derive(Resource)]
 pub struct GameTime {
     time: f64, // measured in seconds
@@ -37,10 +40,10 @@ pub fn update_ambient_light(
 ) {
     for mut light_config in player_query {
         if game_time.is_night() {
-            light_config.ambient_color = Color::hsl(199., 0.437, 0.23)
+            light_config.ambient_color = NIGHT_BRIGHTNESS
         }
         else {
-            light_config.ambient_color = Color::hsl(52., 1.0, 0.961)
+            light_config.ambient_color = DAY_BRIGHTNESS
         }
     }
 }

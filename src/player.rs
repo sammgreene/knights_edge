@@ -1,5 +1,5 @@
 use bevy::input::common_conditions::input_just_pressed;
-use bevy::{prelude::*, sprite::Anchor};
+use bevy::{prelude::*, sprite::Anchor, audio};
 pub mod player_camera;
 use bevy_firefly::lights::PointLight2d;
 // use bevy_firefly::sprites;
@@ -21,7 +21,8 @@ impl Plugin for PlayerPlugin {
                 player_camera::update_camera,
                 update_player_marker,
                 update_player_animation,
-                drop_held_item.run_if(input_just_pressed(KeyCode::KeyQ)).before(TransformSystems::Propagate)
+                drop_held_item.run_if(input_just_pressed(KeyCode::KeyQ)),
+                update_running_sounds
             ));
     }
 }
@@ -82,6 +83,18 @@ pub fn spawn_player(
     let mut sprite = spritesheet.with_size_hint(288,1152).sprite(&mut atlas_layouts);
     sprite.custom_size = Some(Vec2::splat(4.0));
 
+    // Create an entity dedicated to playing our background sounds
+    commands.spawn((
+        AudioPlayer::new(asset_server.load("sounds/forest_ambient.wav")),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.2)),
+    ));
+
+    // Create an entity dedicated to playing our background music
+    commands.spawn((
+        AudioPlayer::new(asset_server.load("sounds/field_theme.wav")),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.1)),
+    ));
+
     // --- Player entity ---
     commands.spawn((
         Player,
@@ -98,6 +111,8 @@ pub fn spawn_player(
         },
         crate::items::inventory::Inventory::new(16),
 
+        AudioPlayer::new(asset_server.load("sounds/grass_running.wav")),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.45)),
 
         SpatialListener::new(0.5),
 
@@ -164,13 +179,23 @@ fn update_player_animation(
     }
 }
 
+fn update_running_sounds(
+    player: Single<(&Velocity, &AudioSink), With<Player>>
+) {
+    let (velo, sink) = player.into_inner();
+
+    if velo.is_moving() { sink.play(); }
+    else { sink.pause(); }
+}
+
 fn drop_held_item(
     player: Single<(Entity, &mut inventory::Inventory, &Transform), With<Player>>,
     mut commands: Commands,
     mut physics: Query<(&mut PhysicalTranslation, &mut PreviousPhysicalTranslation)>,
 ) {
     let (player, mut player_inventory, player_transform) = player.into_inner();
-    let held_item_index = player_inventory.selected_item;
+    if player_inventory.selected_item.is_none() { return }
+    let held_item_index = player_inventory.selected_item.unwrap();
     let held_item = player_inventory.items[held_item_index];
     let pos = Vec2::new(player_transform.translation.x, player_transform.translation.y);
 
@@ -186,4 +211,7 @@ fn drop_held_item(
     
     
     player_inventory.items.remove(held_item_index);
+    if !player_inventory.selecting_valid_item() {
+        player_inventory.select_valid_item();
+    }
 }

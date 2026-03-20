@@ -61,7 +61,7 @@ pub fn spawn_tile_sprites_for_new_chunks(
                                     &asset_server
                                 ),
                                 1.0,
-                                1.0,
+                                2.0,
                                 SortOffset(0.0)
                             ),
                         Foliage::Tree(TreeType::Oak) =>
@@ -83,16 +83,16 @@ pub fn spawn_tile_sprites_for_new_chunks(
                             OccludesPlayer,
                             sort_offset,
                             foliage,
-                            Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(0.3),
+                            Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(1.0),
                             render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
                             Sprite {
                                 image: foliage_asset,
                                 custom_size: Some(Vec2::new(size_x, size_y)),
                                 ..default()
                             },
-                            Anchor(Vec2 { x: 0.1, y: -0.5 }),
+                            Anchor::BOTTOM_CENTER,
                             Transform {
-                                translation: Vec3::new(chunk_x as f32, chunk_y as f32, 0.0),
+                                translation: Vec3::new(chunk_x as f32 + 0.5, chunk_y as f32 - 0.3, 0.0),
                                 ..default()
                             },
                         ));
