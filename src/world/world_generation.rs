@@ -58,7 +58,7 @@ pub enum WorldTile {
 #[derive(Clone, Copy, Component, PartialEq)]
 pub enum Foliage {
     None, // most common case
-    Rock,
+    // Rock,
     Tree(TreeType),
     Bush
 }
@@ -73,7 +73,7 @@ pub struct Chunk {
     pub coord: IVec2,
     pub tile_data: [[WorldTile; CHUNK_SIZE]; CHUNK_SIZE],
     pub foliage_data: [[Foliage; CHUNK_SIZE]; CHUNK_SIZE],
-    pub biome_data: [[Biome; CHUNK_SIZE]; CHUNK_SIZE]
+    // pub biome_data: [[Biome; CHUNK_SIZE]; CHUNK_SIZE]
 }
 
 // Systems
@@ -177,7 +177,7 @@ fn gen_chunk(
         }
     }
 
-    Chunk { coord, tile_data, foliage_data, biome_data }
+    Chunk { coord, tile_data, foliage_data, /* biome_data */ }
 }
 
 pub fn despawn_distant_chunks(

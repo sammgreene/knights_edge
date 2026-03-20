@@ -31,6 +31,8 @@ pub struct ItemStack {
     count: u8
 }
 impl ItemStack {
+}
+impl ItemStack {
     fn new(kind: ItemType, count: u8) -> Self {
         debug_assert!(
             count <= kind.max(),
@@ -42,6 +44,9 @@ impl ItemStack {
             kind,
             count 
         }
+    }
+    fn print_stack(&self) {
+        info!("Stack {{{:?}, {:?}}}", self.kind, self.count)
     }
 }
 
