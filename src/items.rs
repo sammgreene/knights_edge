@@ -34,7 +34,7 @@ impl ItemStack {
 }
 impl ItemStack {
     fn new(kind: ItemType, count: u8) -> Self {
-        debug_assert!(
+        assert!(
             count <= kind.max(),
             "Tried to spawn {} of {:?}, max is {}",
             count, kind, kind.max()
@@ -46,7 +46,7 @@ impl ItemStack {
         }
     }
     fn print_stack(&self) {
-        info!("Stack {{{:?}, {:?}}}", self.kind, self.count)
+        info!("ItemStack {{ {:?}, {:?} }}", self.kind, self.count)
     }
 }
 
@@ -178,7 +178,7 @@ fn animate_bobbing(
 
 fn test_items(mut commands: Commands, asset_server: Res<AssetServer>) {
     ItemType::Apple.spawn(2, vec3(-10.,-3.5,0.0), &mut commands, &asset_server);
-    ItemType::BasicSword.spawn(2, vec3(10.,-3.5,0.0), &mut commands, &asset_server);
+    ItemType::BasicSword.spawn(1, vec3(10.,-3.5,0.0), &mut commands, &asset_server);
 }
 
 fn make_dropped_items_visible(

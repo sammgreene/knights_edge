@@ -71,8 +71,8 @@ pub fn spawn_tile_sprites_for_new_chunks(
                                     (world_x, world_y), 
                                     &asset_server
                                 ),
-                                5.0,
-                                7.0,
+                                4.0,
+                                4.0,
                                 SortOffset(0.0) // hmmm
                             ),
                         Foliage::None => (Handle::default(),1.0,1.0,SortOffset(0.0))

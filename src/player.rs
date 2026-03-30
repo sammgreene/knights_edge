@@ -39,7 +39,10 @@ pub struct PlayerMarker;
 #[derive(Resource)]
 struct PlayerAnimations {
     idle: Handle<Animation>,
-    run: Handle<Animation>,
+    run_left: Handle<Animation>,
+    run_right: Handle<Animation>,
+    run_up: Handle<Animation>,
+    run_down: Handle<Animation>
     // attack: Handle<Animation>
 }
 
@@ -48,6 +51,17 @@ pub struct VisionProfile {
     pub occlusion_radius: f32,
     pub min_alpha: f32,
     pub max_alpha: f32,
+}
+
+#[derive(Component)]
+struct FacingDirection {
+    facing: Direction
+}
+enum Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
 }
 
 // Systems
@@ -62,13 +76,30 @@ pub fn spawn_player(
 
     let spritesheet = Spritesheet::new(&image, 6, 24);
 
+
     let idle_animation = spritesheet.create_animation().add_row(0).build();
 
     let idle_animation_handle = animations.add(idle_animation);
 
-    let run_animation = spritesheet.create_animation().add_row(2).build();
 
-    let run_animation_handle = animations.add(run_animation);
+    let run_left_animation = spritesheet.create_animation().add_row(7).build();
+
+    let run_left_animation_handle = animations.add(run_left_animation);
+
+
+    let run_right_animation = spritesheet.create_animation().add_row(6).build();
+
+    let run_right_animation_handle = animations.add(run_right_animation);
+
+
+    let run_up_animation = spritesheet.create_animation().add_row(5).build();
+
+    let run_up_animation_handle = animations.add(run_up_animation);
+
+
+    let run_down_animation = spritesheet.create_animation().add_row(4).build();
+
+    let run_down_animation_handle = animations.add(run_down_animation);
 
     // let attack_animation = spritesheet.create_animation().add_row(18).build();
 
@@ -76,7 +107,10 @@ pub fn spawn_player(
 
     commands.insert_resource(PlayerAnimations {
         idle: idle_animation_handle.clone(),
-        run: run_animation_handle,
+        run_left: run_left_animation_handle,
+        run_right: run_right_animation_handle,
+        run_up: run_up_animation_handle,
+        run_down: run_down_animation_handle,
         // attack: attack_animation_handle,
     });
 
@@ -86,13 +120,13 @@ pub fn spawn_player(
     // Create an entity dedicated to playing our background sounds
     commands.spawn((
         AudioPlayer::new(asset_server.load("sounds/forest_ambient.wav")),
-        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.2)),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.15)),
     ));
 
     // Create an entity dedicated to playing our background music
     commands.spawn((
         AudioPlayer::new(asset_server.load("sounds/field_theme.wav")),
-        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.1)),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.2)),
     ));
 
     // --- Player entity ---
@@ -112,7 +146,7 @@ pub fn spawn_player(
         crate::items::inventory::Inventory::new(16),
 
         AudioPlayer::new(asset_server.load("sounds/grass_running.wav")),
-        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.45)),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.9)),
 
         SpatialListener::new(0.5),
 
@@ -161,21 +195,30 @@ fn update_player_animation(
 ) {
     let (player_velocity, mut player_sprite, mut animation) = player.into_inner();
 
-    if player_velocity.is_moving() { // if moving
-        if animation.animation != player_animations.run {
-            animation.switch(player_animations.run.clone());
+    if player_velocity.moving_left() { // if moving
+        if animation.animation != player_animations.run_left {
+            animation.switch(player_animations.run_left.clone());
+        }
+    }
+    else if player_velocity.moving_right() { // if moving
+        if animation.animation != player_animations.run_right {
+            animation.switch(player_animations.run_right.clone());
+        }
+    }
+    else if player_velocity.moving_up() { // if moving
+        if animation.animation != player_animations.run_up {
+            animation.switch(player_animations.run_up.clone());
+        }
+    }
+    else if player_velocity.moving_down() { // if moving
+        if animation.animation != player_animations.run_down {
+            animation.switch(player_animations.run_down.clone());
         }
     }
     else { // not moving
         if animation.animation != player_animations.idle {
             animation.switch(player_animations.idle.clone());
         }
-    }
-    if player_velocity.moving_left() {
-        player_sprite.flip_x = true;
-    }
-    else {
-        player_sprite.flip_x = false;
     }
 }
 

@@ -69,7 +69,7 @@ pub fn inventories_pickup_nearby_items(
                 }
             }
             if item_position.translation.distance(inventory_pos.translation) < PICKUP_DIST {
-                item_stack.print_stack();
+                // item_stack.print_stack();
                 commands.entity(item).insert((
                     AudioPlayer::new(asset_server.load("sounds/item_pickup.wav")),
                     PlaybackSettings::ONCE.with_volume(Volume::Linear(0.2))

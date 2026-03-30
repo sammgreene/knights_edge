@@ -54,15 +54,15 @@ impl Velocity {
     pub fn moving_left(&self) -> bool {
         self.0.x < 0.0
     }
-    // pub fn moving_right(&self) -> bool {
-    //     self.0.x > 0.0
-    // }
-    // pub fn moving_up(&self) -> bool {
-    //     self.0.y > 0.0
-    // }
-    // pub fn moving_down(&self) -> bool {
-    //     self.0.y < 0.0
-    // }
+    pub fn moving_right(&self) -> bool {
+        self.0.x > 0.0
+    }
+    pub fn moving_up(&self) -> bool {
+        self.0.y > 0.0
+    }
+    pub fn moving_down(&self) -> bool {
+        self.0.y < 0.0
+    }
     pub fn is_moving(&self) -> bool {
         self.0 != Vec2::ZERO
     }
