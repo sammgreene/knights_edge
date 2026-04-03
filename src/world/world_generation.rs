@@ -60,7 +60,7 @@ pub enum Foliage {
     None, // most common case
     // Rock,
     Tree(TreeType),
-    Bush
+    TallGrass
 }
 #[derive(Clone, Copy, PartialEq)]
 pub enum TreeType {
@@ -232,7 +232,7 @@ fn foliage_from_biome_and_vegetation_amp(biome: Biome, vegetation_value: f32, wh
 
 fn forest_foliage(vegetation_value: f32, white_noise: f32) -> Foliage {
     if vegetation_value > 0.3 && white_noise > 0.25 {
-        Foliage::Bush
+        Foliage::TallGrass
     }
     else if vegetation_value < 0.2 && white_noise > 0.9 {
         Foliage::Tree(TreeType::Oak)
