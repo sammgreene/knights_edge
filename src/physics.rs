@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 pub mod player_movement_physics;
+pub mod collision;
 
 pub struct PhysicsPlugin;
 
@@ -12,7 +13,7 @@ impl Plugin for PhysicsPlugin {
             // At the beginning of each fixed timestep, set the flag that indicates whether the fixed timestep has run this frame.
             .add_systems(FixedPreUpdate, set_fixed_time_step_flag)
             // Advance the physics simulation using a fixed timestep.
-            .add_systems(FixedUpdate, advance_physics)
+            .add_systems(FixedUpdate, (advance_physics, collision::resolve_static_collisions, collision::resolve_dynamic_collisions).chain())
             .add_systems(
                 // The `RunFixedMainLoop` schedule allows us to schedule systems to run before and after the fixed timestep loop.
                 RunFixedMainLoop,
@@ -31,11 +32,14 @@ impl Plugin for PhysicsPlugin {
                         // This could be run in `Update`, but if we run it here instead, the systems in `Update`
                         // will be working with the `Transform` that will actually be shown on screen.
                         interpolate_rendered_transform,
+                        collision::flag_bodies_without_colliders,
+                        collision::flag_colliders_without_bodies
                     )
                         .chain()
                         .in_set(RunFixedMainLoopSystems::AfterFixedMainLoop),
                 ),
-            );
+            )
+            .add_systems(Update, (collision::spawn_debug_label, collision::update_debug_labels));
     }
 }
 
@@ -119,14 +123,16 @@ fn advance_physics(
     mut query: Query<(
         &mut PhysicalTranslation,
         &mut PreviousPhysicalTranslation,
-        &Velocity,
+        &mut Velocity,
     )>,
 ) {
-    for (mut current_physical_translation, mut previous_physical_translation, velocity) in
+    for (mut current_physical_translation, mut previous_physical_translation, mut velocity) in
         query.iter_mut()
     {
         previous_physical_translation.0 = current_physical_translation.0;
         current_physical_translation.0 += velocity.0 * fixed_time.delta_secs();
+        velocity.0 *= 0.85; // friction
+        if velocity.0.length() < 0.0001 { velocity.0 = vec2(0.,0.) }
     }
 }
 

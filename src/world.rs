@@ -22,7 +22,6 @@ impl Plugin for WorldPlugin {
                         world_generation::register_new_chunks,
                         world_generation::despawn_distant_chunks,
                         world_rendering::spawn_tile_sprites_for_new_chunks,
-                        world_rendering::wind_sway_system
                     ).chain(),
                     daycycle::advance_game_time,
                     daycycle::update_ambient_light

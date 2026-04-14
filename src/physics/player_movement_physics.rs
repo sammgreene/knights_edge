@@ -53,6 +53,9 @@ pub fn accumulate_player_input(
     // diagonal movement would be faster than horizontal or vertical movement.
     // We use `clamp_length_max` instead of `.normalize_or_zero()` because gamepad input
     // may be smaller than 1.0 when the player is pushing the stick just a little bit.
+    // if get_tile_at(world_map, chunks_query, x, y) == Some(WorldTile::Water) {
+
+    // }
     velocity.0 = input.movement.clamp_length_max(1.0) * speed;
 }
 

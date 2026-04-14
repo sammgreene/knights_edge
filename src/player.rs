@@ -4,7 +4,7 @@ pub mod player_camera;
 use bevy_firefly::lights::PointLight2d;
 // use bevy_firefly::sprites;
 use player_camera::*;
-use crate::physics::*;
+use crate::physics::{self, *};
 use crate::render::*;
 use crate::items::*;
 use bevy_spritesheet_animation::prelude::*;
@@ -20,7 +20,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(Update, (
                 player_camera::update_camera,
                 update_player_marker,
-                update_player_animation,
+                update_player_animation_and_facing,
                 drop_held_item.run_if(input_just_pressed(KeyCode::KeyQ)),
                 update_running_sounds
             ));
@@ -55,7 +55,7 @@ pub struct VisionProfile {
 
 #[derive(Component)]
 struct FacingDirection {
-    facing: Direction
+    direction: Direction
 }
 enum Direction {
     UP,
@@ -130,7 +130,7 @@ pub fn spawn_player(
     ));
 
     // --- Player entity ---
-    commands.spawn((
+    let mut e = commands.spawn((
         Player,
         VisionProfile {
             occlusion_radius: 4.,
@@ -143,10 +143,10 @@ pub fn spawn_player(
             range: 4.5,
             ..Default::default()
         },
-        crate::items::inventory::Inventory::new(16),
+        crate::items::inventory::Inventory::new(0),
 
         AudioPlayer::new(asset_server.load("sounds/grass_running.wav")),
-        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(0.9)),
+        PlaybackSettings::LOOP.with_volume(audio::Volume::Linear(1.0)),
 
         SpatialListener::new(0.5),
 
@@ -160,11 +160,17 @@ pub fn spawn_player(
 
         Transform::from_xyz(0.0, 0.0, 0.0),
         
-        crate::physics::PhysicsObject,
-        crate::physics::player_movement_physics::PlayerController,
+        physics::PhysicsObject,
+        physics::player_movement_physics::PlayerController,
     ));
 
-    // --- Debug Player MarkerThing ---
+    e.insert((
+        FacingDirection { direction: Direction::DOWN },
+        physics::collision::Collider::circle(0.4, 1.0),
+        physics::collision::DynamicBody::new(5.0),
+    ));
+
+    // --- Debug Player Marker Thing ---
     commands.spawn((
         PlayerMarker,
         RenderLayer::UI,
@@ -189,28 +195,33 @@ fn update_player_marker(
     marker.translation = vec3(player.translation.x.floor(), player.translation.y.floor(), RenderLayer::UI as i32 as f32)
 }
 
-fn update_player_animation(
-    player: Single<(&crate::physics::Velocity, &mut Sprite, &mut SpritesheetAnimation)>,
+fn update_player_animation_and_facing(
+    player: Single<(&crate::physics::Velocity, &mut SpritesheetAnimation)>,
+    mut facing: Single<&mut FacingDirection, With<Player>>,
     player_animations: Res<PlayerAnimations>
 ) {
-    let (player_velocity, mut player_sprite, mut animation) = player.into_inner();
+    let (player_velocity, mut animation) = player.into_inner();
 
     if player_velocity.moving_left() { // if moving
+        facing.direction = Direction::LEFT;
         if animation.animation != player_animations.run_left {
             animation.switch(player_animations.run_left.clone());
         }
     }
     else if player_velocity.moving_right() { // if moving
+        facing.direction = Direction::RIGHT;
         if animation.animation != player_animations.run_right {
             animation.switch(player_animations.run_right.clone());
         }
     }
     else if player_velocity.moving_up() { // if moving
+        facing.direction = Direction::UP;
         if animation.animation != player_animations.run_up {
             animation.switch(player_animations.run_up.clone());
         }
     }
     else if player_velocity.moving_down() { // if moving
+        facing.direction = Direction::DOWN;
         if animation.animation != player_animations.run_down {
             animation.switch(player_animations.run_down.clone());
         }

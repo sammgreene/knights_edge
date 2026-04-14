@@ -51,7 +51,8 @@ impl Plugin for DebugPlugin {
                 update_debug_menu,
                 toggle_menu,
                 count_entities,
-                debug_event_playground
+                print_player_inventory.run_if(bevy::input::common_conditions::input_just_pressed(KeyCode::BracketRight)),
+                print_tile_under_player.run_if(bevy::input::common_conditions::input_just_pressed(KeyCode::Backslash))
                 //print_num_entities_with_component::<Sprite>,
             ));
     }
@@ -164,24 +165,23 @@ fn new_debug_text(name: &str, text: &str, commands: &mut Commands, debug_menu: &
     debug_menu.ui_line_count += 1;
 }
 
-fn debug_event_playground(
-    world_map: Res<world_generation::WorldMap>,
-    player_pos: Single<&Transform, With<crate::player::Player>>,
+fn print_player_inventory(
     player_inventory: Single<&crate::items::inventory::Inventory, With<crate::player::Player>>,
     item_stacks: Query<&crate::items::ItemStack>,
-    chunks_query: Query<&crate::world::world_generation::Chunk>,
-    keys: Res<ButtonInput<KeyCode>>,
 ) {
-    if keys.just_pressed(KeyCode::Backslash) {
-        let (player_x, player_y) = (player_pos.translation.x.floor() as i32, player_pos.translation.y.floor() as i32);
-        info!("{:?}{:?}", (player_x, player_y), world_generation::get_tile_at(world_map, chunks_query, player_x, player_y));
-    }
-    if keys.just_pressed(KeyCode::BracketRight) {
-        for entity in &player_inventory.items {
-            match item_stacks.get(*entity) {
-                Ok(stack) => info!("{:?}", stack),
-                Err(_) => info!("entity {:?} has no ItemStack", entity),
-            }
+    for entity in &player_inventory.items {
+        match item_stacks.get(*entity) {
+            Ok(stack) => info!("{:?}", stack),
+            Err(_) => info!("entity {:?} has no ItemStack", entity),
         }
     }
+}
+
+fn print_tile_under_player(
+    world_map: Res<world_generation::WorldMap>,
+    player_pos: Single<&Transform, With<crate::player::Player>>,
+    chunks_query: Query<&crate::world::world_generation::Chunk>
+) {
+    let (player_x, player_y) = (player_pos.translation.x.floor() as i32, player_pos.translation.y.floor() as i32);
+    info!("{:?}{:?}", (player_x, player_y), world_generation::get_tile_at(world_map, chunks_query, player_x, player_y));
 }

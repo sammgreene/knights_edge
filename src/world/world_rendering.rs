@@ -10,8 +10,6 @@ use crate::render::{self, OccludesPlayer, SortOffset};
 pub fn spawn_tile_sprites_for_new_chunks(
     mut commands: Commands,
     new_chunks: Query<(Entity, &Chunk), Added<Chunk>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
     for (entity, chunk) in new_chunks.iter() {
@@ -44,7 +42,7 @@ pub fn spawn_tile_sprites_for_new_chunks(
 
                     let foliage = chunk.foliage_data[chunk_x][chunk_y];
 
-                    spawn_foliage_entity(parent, foliage, world_x, world_y, chunk_x, chunk_y, &mut meshes, &mut materials, &asset_server);
+                    spawn_foliage_entity(parent, foliage, world_x, world_y, chunk_x, chunk_y, &asset_server);
                 }
             }
 
@@ -92,8 +90,6 @@ fn spawn_foliage_entity(
     world_y: i32,
     chunk_x: usize,
     chunk_y: usize,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
     asset_server: &Res<AssetServer>
 ) {
     let (foliage_asset, size_x, size_y, sort_offset) = match foliage {
@@ -136,9 +132,11 @@ fn spawn_foliage_entity(
         parent.spawn((
             foliage,
             OccludesPlayer,
+            crate::physics::collision::Collider::circle(0.1, 1.0),
+            crate::physics::collision::StaticBody,
             sort_offset,
-            Occluder2d::circle(0.25).with_offset(vec3(0.5, 0.5, 0.0)).with_opacity(1.0),
-            render::RenderLayer::Foliage,// .with_offset(new_y as f32 - chunk_y as f32),
+            Occluder2d::circle(0.25).with_opacity(1.0),
+            render::RenderLayer::Foliage,
             Sprite {
                 image: foliage_asset,
                 custom_size: Some(Vec2::new(size_x, size_y)),
@@ -151,28 +149,23 @@ fn spawn_foliage_entity(
             },
         ));
     } else if foliage == Foliage::TallGrass {
-        let mesh = create_grass_quad(size_x, size_y);
-        let mesh_handle = meshes.add(mesh);
 
         parent.spawn((
             foliage,
             sort_offset,
-            WindSway {
-                sway_offset: (chunk_x as f32 * 1.3 + chunk_y as f32 * 0.7).fract() * std::f32::consts::TAU,
-                sway_strength: 0.75,
-            },
+            render::grass_sway::PlayerSway,
             Occluder2d::circle(0.25)
                 .with_offset(vec3(0.5, 0.5, 0.0))
                 .with_opacity(0.3),
             render::RenderLayer::Foliage,
-            Mesh2d(mesh_handle),
-            MeshMaterial2d(materials.add(ColorMaterial {
-                texture: Some(foliage_asset),
+            Sprite {
+                image: asset_server.load("foliage/bush/bush_0.png"),
+                custom_size: Some(vec2(size_x,size_y)),
                 ..default()
-            })),
-            Anchor::BOTTOM_LEFT,
+            },
+            Anchor::BOTTOM_CENTER,
             Transform {
-                translation: Vec3::new(chunk_x as f32, chunk_y as f32, 0.0),
+                translation: Vec3::new(chunk_x as f32 + 0.5, chunk_y as f32, 0.0),
                 ..default()
             },
         ));
@@ -187,80 +180,11 @@ fn spawn_foliage_entity(
                 custom_size: Some(Vec2::new(size_x, size_y)),
                 ..default()
             },
-            Anchor::BOTTOM_LEFT,
+            Anchor::BOTTOM_CENTER,
             Transform {
-                translation: Vec3::new(chunk_x as f32, chunk_y as f32, 0.0),
+                translation: Vec3::new(chunk_x as f32 + 0.5, chunk_y as f32, 0.0),
                 ..default()
             },
         ));
-    }
-}
-
-#[derive(Component)]
-pub struct WindSway {
-    pub sway_offset: f32,
-    pub sway_strength: f32
-}
-
-fn create_grass_quad(width: f32, height: f32) -> Mesh {
-    // Vertex layout (indices):
-    //  2 ------- 3   <- top (these will sway)
-    //  |         |
-    //  0 ------- 1   <- bottom (pinned)
-    
-    let positions: Vec<[f32; 3]> = vec![
-        [0.0,   0.0,    0.0], // 0 bottom-left  (pinned)
-        [width, 0.0,    0.0], // 1 bottom-right (pinned)
-        [0.0,   height, 0.0], // 2 top-left     (sways)
-        [width, height, 0.0], // 3 top-right    (sways)
-    ];
-
-    let uvs: Vec<[f32; 2]> = vec![
-        [0.0, 1.0], // bottom-left
-        [1.0, 1.0], // bottom-right
-        [0.0, 0.0], // top-left
-        [1.0, 0.0], // top-right
-    ];
-
-    let indices = vec![0u32, 1, 2,  1, 3, 2];
-
-    let mut mesh = Mesh::new(
-        bevy::mesh::PrimitiveTopology::TriangleList,
-        bevy::asset::RenderAssetUsages::MAIN_WORLD | bevy::asset::RenderAssetUsages::RENDER_WORLD,
-    );
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-    mesh.insert_indices(bevy::mesh::Indices::U32(indices));
-    mesh
-}
-
-pub fn wind_sway_system(
-    time: Res<Time>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    query: Query<(&WindSway, &Mesh2d, &Transform)>,
-) {
-    let t = time.elapsed_secs();
-    let wind_speed = 1.8_f32;
-    let base_sway = 0.12_f32; // max X displacement in world units
-
-    for (grass, mesh2d, transform) in &query {
-        let Some(mesh) = meshes.get_mut(&mesh2d.0) else { continue };
-
-        let phase = t * wind_speed + grass.sway_offset;
-        // Use two frequencies for a more organic feel
-        let sway_x = (phase.sin() + 0.4 * (phase * 2.3).sin())
-            * base_sway
-            * grass.sway_strength;
-
-        let Some(bevy::mesh::VertexAttributeValues::Float32x3(positions)) =
-            mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION)
-        else { continue };
-
-        let height = positions[2][1]; // top-left Y = grass height
-
-        // Indices 2 and 3 are the top vertices
-        positions[2][0] = 0.0 + sway_x;           // top-left X
-        positions[3][0] = transform.scale.x + sway_x; // top-right X
-        // If not using scale, store width in WindGrass and use that instead
     }
 }

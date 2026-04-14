@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-
+pub mod grass_sway;
 pub struct RenderPlugin;
 
 impl Plugin for RenderPlugin {
@@ -8,7 +8,8 @@ impl Plugin for RenderPlugin {
             // .add_systems(Startup, ())
             .add_systems(Update,(
                 y_sort,
-                update_foliage_occlusion
+                update_foliage_occlusion,
+                grass_sway::player_grass_sway_system
             ));
     }
 }
