@@ -3,6 +3,7 @@ use bevy::sprite::Anchor;
 use bevy_firefly::lights::PointLight2d;
 use crate::physics::PhysicsObject;
 use crate::render::*;
+use crate::debug::*;
 
 pub mod inventory;
 mod actions;
@@ -249,9 +250,10 @@ pub fn spawn_item_stack_label(
         commands.entity(entity).with_children(|parent| {
             parent.spawn((
                 Text2d::new(""),
+                DebugItem,
                 TextFont { font_size: 21.0, ..default() },
                 TextColor(Color::WHITE),
-                Transform::from_xyz(0.0, 1.0, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
+                Transform::from_xyz(0.0, 1.5, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
                 ItemStackLabel,
             ));
         });

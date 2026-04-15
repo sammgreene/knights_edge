@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use dynfmt::{Format, SimpleCurlyFormat};
 
-use crate::{player::PlayerMarker, world::world_generation};
+use crate::world::world_generation;
 
 #[derive(Resource)]
 pub struct DebugMenu {
@@ -49,10 +49,10 @@ impl Plugin for DebugPlugin {
             .add_systems(Startup, ui_setup)
             .add_systems(Update, (
                 update_debug_menu,
-                toggle_menu,
                 count_entities,
-                print_player_inventory.run_if(bevy::input::common_conditions::input_just_pressed(KeyCode::BracketRight)),
-                print_tile_under_player.run_if(bevy::input::common_conditions::input_just_pressed(KeyCode::Backslash))
+                print_player_inventory.run_if(input_just_pressed(KeyCode::BracketRight)),
+                print_tile_under_player.run_if(input_just_pressed(KeyCode::Backslash)),
+                toggle_menu.run_if(input_just_pressed(KeyCode::F3)),
                 //print_num_entities_with_component::<Sprite>,
             ));
     }
@@ -101,30 +101,24 @@ fn update_debug_menu(
     }
 }
 
-fn toggle_menu(
-    keys: Res<ButtonInput<KeyCode>>,
-    mut debug_menu: ResMut<DebugMenu>,
-    mut text: Query<&mut Visibility, With<DebugText>>,
-    mut player_marker: Query<&mut Visibility, (With<PlayerMarker>, Without<DebugText>)>
-) {
-    let mut visible = debug_menu.render;
-    if keys.just_pressed(KeyCode::F3) {
-        visible = !visible;
-        debug_menu.render = visible;
+#[derive(Component)]
+pub struct DebugItem;
 
-        for mut v in &mut text {
-            *v = if visible {
-                Visibility::Visible
-            } else {
-                Visibility::Hidden
-            };
+fn toggle_menu(
+    mut debug_menu: ResMut<DebugMenu>,
+    debug_items: Query<&mut Visibility, With<DebugItem>>,
+) {
+    // First invert the debug_menu resource render state
+    info!("DEBUG TOGGLE");
+    debug_menu.render = !debug_menu.render;
+    
+    if debug_menu.render { // should render debug items
+        for mut item_visibility in debug_items {
+            *item_visibility = Visibility::Visible;
         }
-        for mut player_marker in &mut player_marker {
-            *player_marker = if visible {
-                Visibility::Visible
-            } else {
-                Visibility::Hidden
-            };
+    } else {
+        for mut item_visibility in debug_items {
+            *item_visibility = Visibility::Hidden;
         }
     }
 }
@@ -159,6 +153,7 @@ fn new_debug_text(name: &str, text: &str, commands: &mut Commands, debug_menu: &
             text
         ),
         DebugText { name: String::from(name), text: String::from(text) },
+        DebugItem,
         TextColor::WHITE,
         visibility
     ));

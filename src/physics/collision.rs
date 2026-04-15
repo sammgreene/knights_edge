@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::physics::*;
+use crate::debug::*;
 
 #[derive(Component)]
 pub struct Collider {
@@ -138,6 +139,7 @@ pub fn spawn_debug_label(
         commands.entity(entity).with_children(|parent| {
             parent.spawn((
                 Text2d::new(""),
+                DebugItem,
                 TextFont { font_size: 21.0, ..default() },
                 TextColor(Color::WHITE),
                 Transform::from_xyz(0.0, 1.0, 100.0).with_scale(vec3(0.02,0.02,1.0)), // above the entity

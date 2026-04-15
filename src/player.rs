@@ -7,6 +7,7 @@ use player_camera::*;
 use crate::physics::{self, *};
 use crate::render::*;
 use crate::items::*;
+use crate::debug::*;
 use bevy_spritesheet_animation::prelude::*;
 
 pub struct PlayerPlugin;
@@ -173,6 +174,7 @@ pub fn spawn_player(
     // --- Debug Player Marker Thing ---
     commands.spawn((
         PlayerMarker,
+        DebugItem,
         RenderLayer::UI,
         Sprite {
             image: asset_server.load("snow/snow_full/snow_full_0.png"),

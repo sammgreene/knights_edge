@@ -36,16 +36,16 @@ pub fn accumulate_player_input(
     // Reset the input to zero before reading the new input. As mentioned above, we can only do this
     // because this is continuously pressed by the user. Do not reset e.g. whether the user wants to boost.
     input.movement = Vec2::ZERO;
-    if keyboard_input.pressed(KeyCode::KeyW) {
+    if keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp) {
         input.movement.y += 1.0;
     }
-    if keyboard_input.pressed(KeyCode::KeyS) {
+    if keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown) {
         input.movement.y -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::KeyA) {
+    if keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft) {
         input.movement.x -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::KeyD) {
+    if keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight) {
         input.movement.x += 1.0;
     }
 
