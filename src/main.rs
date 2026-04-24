@@ -9,6 +9,7 @@ mod debug;
 mod render;
 mod items;
 mod triggers;
+mod creatures;
 
 fn main() {
     App::new()
@@ -23,6 +24,7 @@ fn main() {
             debug::DebugPlugin,
             render::RenderPlugin,
             items::ItemsPlugin,
+            creatures::CreatureDataPlugin
         ))
         .run();
 }
