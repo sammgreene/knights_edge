@@ -31,6 +31,7 @@ fn world_to_chunk_position(x: i32, y: i32) -> IVec2 {
 pub struct WorldMap {
     pub chunks: HashMap<IVec2, Entity>
 }
+
 pub fn get_tile_at(
     world_map: Res<WorldMap>,
     chunks_query: Query<&Chunk>,

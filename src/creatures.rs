@@ -23,8 +23,13 @@ impl Plugin for CreatureDataPlugin {
                 ai::transition_goals.run_if(on_timer(Duration::from_secs(3))),
                 ai::assign_goals_and_tasks_to_new_creature_entities,
                 ai::spawn_ai_debug_label,
-                ai::update_ai_state_labels
-            ));
+                ai::update_ai_state_labels,
+                spawn_creature_status_debug_label,
+                update_creature_state_labels,
+                ai::task_go_to,
+                ai::task_locate_random,
+                ai::transition_tasks
+            ).chain());
     }
 }
 
@@ -77,7 +82,7 @@ impl CreatureMemory {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct CreatureState {
     pub health: Quantity,
     pub stamina: Quantity, 
@@ -98,6 +103,7 @@ impl CreatureState {
 #[derive(Component)]
 pub struct Creature(String);
 
+#[derive(Debug)]
 pub struct Quantity {
     value: f32,
     max: f32,
@@ -108,18 +114,59 @@ impl Quantity {
         Self {
             value,
             max,
-            min: f32::EPSILON
+            min: 0.0
         }
     }
     fn fraction(&self) -> f32 {
         return (self.value/self.max).clamp(0.0, 1.0)
     }
     fn is_zero(&self) -> bool {
-        if self.value < f32::EPSILON { warn!("Qauntity: {} is less than minimum: {}", self.value, self.min); }
+        if self.value < self.min { warn!("Qauntity: {} is less than minimum: {}", self.value, self.min); }
         self.value <= f32::EPSILON
     }
     fn is_max(&self) -> bool {
         if self.value > self.max { warn!("Quantity: {} is more than maximum: {}", self.value, self.max); }
         self.value >= self.max
+    }
+    pub fn decrease(&mut self, amount: f32) {
+        if self.value - amount < self.min {
+            self.value = self.min
+        } else {
+            self.value -= amount;
+        }
+    }
+}
+
+pub fn spawn_creature_status_debug_label(
+    mut commands: Commands,
+    items: Query<Entity, Added<CreatureState>>,
+) {
+    for entity in &items {
+        commands.entity(entity).with_children(|parent| {
+            parent.spawn((
+                Text2d::new(""),
+                crate::debug::DebugItem,
+                TextFont { font_size: 21.0, ..default() },
+                TextColor(Color::WHITE),
+                Transform::from_xyz(0.0, -1.0, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
+                CreatureStateLabel,
+            ));
+        });
+    }
+}
+
+#[derive(Component)]
+pub struct CreatureStateLabel;
+
+pub fn update_creature_state_labels(
+    items: Query<(&CreatureState, &Children)>,
+    mut labels: Query<&mut Text2d, With<CreatureStateLabel>>,
+) {
+    for (state, children) in &items {
+        for child in children {
+            if let Ok(mut text) = labels.get_mut(*child) {
+                text.0 = format!("health: {:?}\nstamina: {:?}\nsaturation: {:?}\nfear: {:?}\n", state.health, state.stamina, state.saturation, state.fear);
+            }
+        }
     }
 }

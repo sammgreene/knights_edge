@@ -3016,6 +3016,7 @@ dependencies = [
  "bevy_spritesheet_animation",
  "dynfmt",
  "fastnoise-lite",
+ "rand",
  "ron",
  "serde",
  "sha2",

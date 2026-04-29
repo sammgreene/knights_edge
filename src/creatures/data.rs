@@ -17,7 +17,7 @@ pub struct CreatureDataRaw {
     pub attack_range: f32,
     pub bravery: f32,
     pub endurance: f32,
-    pub weakness: f32,
+    pub robustness: f32,
     pub appetite: f32
 }
 
@@ -62,7 +62,7 @@ impl AssetLoader for CreatureDatabaseLoader {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Clone)]
 pub struct CreatureRelations {
     prey_of: HashMap<String, Vec<String>>,
     predators_of: HashMap<String, Vec<String>>,

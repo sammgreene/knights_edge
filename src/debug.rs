@@ -109,7 +109,7 @@ fn toggle_menu(
     debug_items: Query<&mut Visibility, With<DebugItem>>,
 ) {
     // First invert the debug_menu resource render state
-    info!("DEBUG TOGGLE");
+    info!("Debug Mode: {:?}", !debug_menu.render);
     debug_menu.render = !debug_menu.render;
     
     if debug_menu.render { // should render debug items

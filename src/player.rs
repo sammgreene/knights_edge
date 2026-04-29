@@ -4,6 +4,7 @@ pub mod player_camera;
 use bevy_firefly::lights::PointLight2d;
 // use bevy_firefly::sprites;
 use player_camera::*;
+use crate::creatures::CreatureState;
 use crate::physics::{self, *};
 use crate::render::*;
 use crate::items::*;
@@ -23,7 +24,8 @@ impl Plugin for PlayerPlugin {
                 update_player_marker,
                 update_player_animation_and_facing,
                 drop_held_item.run_if(input_just_pressed(KeyCode::KeyQ)),
-                update_running_sounds
+                update_running_sounds,
+                damage_nearby_creatures.run_if(input_just_pressed(KeyCode::KeyK))
             ));
     }
 }
@@ -269,5 +271,17 @@ fn drop_held_item(
     player_inventory.items.remove(held_item_index);
     if !player_inventory.selecting_valid_item() {
         player_inventory.select_valid_item();
+    }
+}
+
+fn damage_nearby_creatures(
+    creatures: Query<(&mut CreatureState, &Transform, &mut Velocity)>,
+    player: Single<&Transform, (With<Player>, Without<PlayerMarker>)>
+) {
+    for (mut creature, transform, mut velocity) in creatures {
+        if transform.translation.xy().distance(player.translation.xy()) < 2.0 {
+            creature.health.decrease(2.0);
+            velocity.0 += (transform.translation.xy() - player.translation.xy()).clamp_length_min(10.0);
+        }
     }
 }
