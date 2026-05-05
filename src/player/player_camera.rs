@@ -21,10 +21,10 @@ pub fn spawn_player_camera(
 
     // Lighting Scheme
     let mut lighting = FireflyConfig::default();
-    lighting.ambient_brightness = 0.25;
+    lighting.ambient_brightness = 1.;
     lighting.softness = Some(0.5);
     lighting.z_sorting = true;
-    lighting.ambient_color = Color::hsl(35., 0.89, 0.9);
+    lighting.ambient_color = Color::hsl(20., 1., 0.9);
 
     commands.spawn((
         Camera2d,

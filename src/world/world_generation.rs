@@ -5,7 +5,7 @@ use crate::world::{world_lib, world_noise};
 
 // Constants
 pub const CHUNK_SIZE: usize = 16; // world units
-pub const RENDER_DISTANCE: u32 = 4; // chunks
+pub const LOAD_DISTANCE: u32 = 4;
 
 fn world_to_chunk_coord(x: i32, y: i32) -> IVec2 {
     // World chunk coords
@@ -61,11 +61,17 @@ pub enum Foliage {
     None, // most common case
     // Rock,
     Tree(TreeType),
-    TallGrass
+    TallGrass,
+    Flower(FlowerType),
 }
 #[derive(Clone, Copy, PartialEq)]
 pub enum TreeType {
     Oak,
+    Birch,
+}
+#[derive(Clone, Copy, PartialEq)]
+pub enum FlowerType {
+    Red
 }
 
 // Components
@@ -91,7 +97,7 @@ pub fn load_near_chunks(
         let player_chunk_x = (player_position.translation.x / CHUNK_SIZE as f32).floor() as i32;
         let player_chunk_y = (player_position.translation.y / CHUNK_SIZE as f32).floor() as i32;
 
-        let nearby_chunk_coords = world_lib::get_points_in_radius(player_chunk_x, player_chunk_y, RENDER_DISTANCE);
+        let nearby_chunk_coords = world_lib::get_points_in_radius(player_chunk_x, player_chunk_y, LOAD_DISTANCE);
         
         let mut chunks_loaded_this_frame = 0;
         // Check 3x3 area around player for any chunks that need to be generated
@@ -181,7 +187,7 @@ fn gen_chunk(
     Chunk { coord, tile_data, foliage_data, /* biome_data */ }
 }
 
-pub fn despawn_distant_chunks(
+pub fn despawn_distant_chunks( // (and save?)
     chunks_query: Query<(Entity, &Chunk), With<Chunk>>,
     children_query: Query<&Children>, // <-- add this!
     player_transform: Single<&Transform, With<crate::player::Player>>,
@@ -195,10 +201,10 @@ pub fn despawn_distant_chunks(
         y: (player_pos.translation.y / CHUNK_SIZE as f32).floor() as i32,
     };
 
-    let render_dist_squared: i32 = (RENDER_DISTANCE as i32).pow(2);
+    let load_dist_squared: i32 = (LOAD_DISTANCE as i32).pow(2);
 
     for (entity, chunk) in chunks_query.iter() {
-        if chunk.coord.distance_squared(player_chunk) > render_dist_squared {
+        if chunk.coord.distance_squared(player_chunk) > load_dist_squared {
             despawn_recursive(&mut commands, entity, &children_query);
             world_map.chunks.remove(&chunk.coord);
         }
@@ -232,13 +238,21 @@ fn foliage_from_biome_and_vegetation_amp(biome: Biome, vegetation_value: f32, wh
 }
 
 fn forest_foliage(vegetation_value: f32, white_noise: f32) -> Foliage {
-    if vegetation_value > 0.3 && white_noise > 0.25 {
-        Foliage::TallGrass
-    }
-    else if vegetation_value < 0.2 && white_noise > 0.9 {
+    let vegetation_value = (vegetation_value + 1.) / 2.;
+
+    let tree_threshold = 1.0 - (vegetation_value * 0.01 + 0.01);
+    let grass_threshold = 1.0 - (vegetation_value * 0.4 + 0.05);
+    let flower_threshold = grass_threshold - 0.06;
+
+    if white_noise > tree_threshold {
         Foliage::Tree(TreeType::Oak)
+    } else if white_noise > grass_threshold {
+        Foliage::TallGrass
+    } else if white_noise > flower_threshold {
+        Foliage::Flower(FlowerType::Red)
+    } else {
+        Foliage::None
     }
-    else { Foliage::None }
 }
 
 #[derive(Clone, Copy, Debug)]

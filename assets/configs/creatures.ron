@@ -18,7 +18,7 @@
             kind: "Wolf",
             eats: ["venison", "rabbit_meat"],
             prey: ["Deer", "Rabbit"],
-            move_speed: 5.0,
+            move_speed: 8.0,
             sprint_speedup: 1.5,
             attack_damage: 15.0,
             attack_cooldown: 1.2,

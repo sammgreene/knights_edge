@@ -103,6 +103,9 @@ impl CreatureRelations {
     pub fn is_prey(&self, kind: &str) -> bool {
         self.predators_of(kind).len() > 0
     }
+    pub fn is_predator(&self, kind: &str) -> bool {
+        self.prey_of(kind).len() > 0
+    }
 
     // Is `hunter` a predator of `target`?
     pub fn hunts(&self, hunter: &str, target: &str) -> bool {

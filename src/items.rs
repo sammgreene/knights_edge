@@ -252,7 +252,7 @@ pub fn spawn_item_stack_label(
                 Text2d::new(""),
                 DebugItem,
                 TextFont { font_size: 21.0, ..default() },
-                TextColor(Color::WHITE),
+                TextColor(Color::Srgba(Srgba { red: 0.7, green: 0.7, blue: 0.7, alpha: 0.8 })),
                 Transform::from_xyz(0.0, 1.5, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
                 ItemStackLabel,
             ));

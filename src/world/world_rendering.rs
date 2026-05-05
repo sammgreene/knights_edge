@@ -2,9 +2,12 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_firefly::prelude::*;
 
-use crate::world::world_generation:: { CHUNK_SIZE, Chunk, WorldTile, Foliage, TreeType };
+use crate::player::Player;
+use crate::world::world_generation:: { CHUNK_SIZE, Chunk, FlowerType, Foliage, TreeType, WorldMap, WorldTile };
 
 use crate::render::{self, OccludesPlayer, SortOffset};
+
+pub const RENDER_DISTANCE: u32 = 2; // chunks
 
 // Generates tiles for any newly created chunks on the frame they are added
 pub fn spawn_tile_sprites_for_new_chunks(
@@ -47,6 +50,33 @@ pub fn spawn_tile_sprites_for_new_chunks(
             }
 
         });
+    }
+}
+
+pub fn hide_loaded_chunks_out_of_render_distance(
+    map: Res<WorldMap>,
+    mut chunks: Query<(Entity, &mut Visibility), With<Chunk>>,
+    player_transform: Single<&Transform, With<Player>>,
+) {
+    let player_pos = player_transform.translation;
+    let player_chunk = IVec2::new(
+        (player_pos.x / CHUNK_SIZE as f32).floor() as i32,
+        (player_pos.y / CHUNK_SIZE as f32).floor() as i32,
+    );
+
+    for (chunk_coords, &chunk_entity) in map.chunks.iter() {
+        let Ok((_, mut visibility)) = chunks.get_mut(chunk_entity) else {
+            continue;
+        };
+
+        let distance = ((*chunk_coords) - player_chunk).abs();
+        let in_range = distance.x <= RENDER_DISTANCE as i32 && distance.y <= RENDER_DISTANCE as i32;
+
+        *visibility = if in_range {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 
@@ -93,17 +123,17 @@ fn spawn_foliage_entity(
     asset_server: &Res<AssetServer>
 ) {
     let (foliage_asset, size_x, size_y, sort_offset) = match foliage {
-        // Foliage::Rock => 
-        //     (
-        //         crate::asset_loading::load_random_asset_from_dir(
-        //             "foliage/rocks/small_rock", 
-        //             (world_x, world_y), 
-        //             &asset_server
-        //         ),
-        //         1.0,
-        //         1.0,
-        //         SortOffset(0.0)
-        //     ),
+        Foliage::Flower(FlowerType::Red) => 
+            (
+                crate::asset_loading::load_random_asset_from_dir(
+                    "foliage/plants", 
+                    (world_x, world_y), 
+                    &asset_server
+                ),
+                1.0,
+                1.0,
+                SortOffset(0.0)
+            ),
         Foliage::TallGrass =>
             (
                 crate::asset_loading::load_random_asset_from_dir(
@@ -123,10 +153,10 @@ fn spawn_foliage_entity(
                     &asset_server
                 ),
                 4.0,
-                4.0,
+                8.0,
                 SortOffset(0.0) // hmmm
             ),
-        Foliage::None => (Handle::default(),1.0,1.0,SortOffset(0.0))
+        _ => (Handle::default(),1.0,1.0,SortOffset(0.0))
     };
     if foliage == Foliage::Tree(TreeType::Oak) {
         parent.spawn((

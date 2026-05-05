@@ -20,15 +20,22 @@ impl Plugin for CreatureDataPlugin {
             ))
             .add_systems(Update, (
                 on_database_loaded.run_if(resource_exists::<CreatureDatabaseHandle>),
-                ai::transition_goals.run_if(on_timer(Duration::from_secs(3))),
                 ai::assign_goals_and_tasks_to_new_creature_entities,
                 ai::spawn_ai_debug_label,
                 ai::update_ai_state_labels,
                 spawn_creature_status_debug_label,
                 update_creature_state_labels,
+
                 ai::task_go_to,
                 ai::task_locate_random,
-                ai::transition_tasks
+                ai::task_locate_prey,
+                ai::task_chase,
+
+                ai::transition_tasks,
+                ai::transition_goals,
+                ai::assign_task_deadlines,   // picks up Changed<Task> from both transitions above
+                ai::check_task_deadlines,
+
             ).chain());
     }
 }
@@ -98,6 +105,9 @@ impl CreatureState {
             fear: Quantity::new(0.0, 10.0)
         }
     }
+    fn with_saturation(self, saturation: f32) -> Self {
+        Self { health: self.health, stamina: self.stamina, saturation: Quantity::new(saturation, 10.0), fear: self.fear }
+    }
 }
 
 #[derive(Component)]
@@ -147,8 +157,8 @@ pub fn spawn_creature_status_debug_label(
                 Text2d::new(""),
                 crate::debug::DebugItem,
                 TextFont { font_size: 21.0, ..default() },
-                TextColor(Color::WHITE),
-                Transform::from_xyz(0.0, -1.0, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
+                TextColor(Color::Srgba(Srgba { red: 0.7, green: 0.7, blue: 0.7, alpha: 0.8 })),
+                Transform::from_xyz(0.0, -1.5, 100.0).with_scale(vec3(0.02, 0.02, 1.0)),
                 CreatureStateLabel,
             ));
         });
